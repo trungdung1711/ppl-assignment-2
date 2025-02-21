@@ -1,0 +1,787 @@
+// 2210573
+grammar MiniGo;
+
+@lexer::header {
+# 2210573
+from lexererr import *
+}
+
+@lexer::members {
+# store the previous token type
+previousTokenType = None
+
+
+def emit(self):
+    tk = self.type
+    if tk == self.UNCLOSE_STRING:       
+        result = super().emit();
+        raise UncloseString(result.text);
+    elif tk == self.ILLEGAL_ESCAPE:
+        result = super().emit();
+        raise IllegalEscape(result.text);
+    elif tk == self.ERROR_CHAR:
+        result = super().emit();
+        raise ErrorToken(result.text); 
+    else:
+        return super().emit();
+
+
+# Override higher-level method
+# def nextToken(self): 
+#     next_token = super().nextToken()
+#
+#     self.previousTokenType = next_token.type
+#
+#     return next_token
+
+
+# Override the emitToken() called by emit()
+def emitToken(self, token:Token):
+    # set the previousToken to be the current token
+    self.previousTokenType = token.type
+    # call the emitToken()
+    super().emitToken(token)
+}
+
+options{
+	language=Python3;
+}
+
+
+// ANTLR prioritizes rules based on order
+
+/*
+    - The @lexer::header section in an ANTLR .g4 file 
+    is a special directive used to inject custom code 
+    into the generated lexer.
+
+    - When ANTLR generates the Python lexer, 
+    it will include this code at the top of the lexer file.
+
+    - Yes, via inline actions
+ */
+
+
+/*
+    - Defines custom methods inside the lexer class.
+
+    - Inside the lexer class
+
+    - Yes, via methods
+
+    - If error handling gets complex, 
+    using @lexer::members to define separate functions makes 
+    the code cleaner and more maintainable.
+ */
+
+
+// LEXER RULES
+
+// TOKENS
+/* 
+    - keywords, 
+    - identifiers, 
+    - operators, 
+    - separators, 
+    - literals
+*/
+
+/*
+    keywords:
+    - reserved words
+    - cannot be used as identifiers
+*/
+INTERFACE           : 'interface' ;
+CONTINUE            : 'continue' ;
+BOOLEAN             : 'boolean' ;
+RETURN              : 'return' ;
+STRUCT              : 'struct' ;
+STRING              : 'string' ;
+FLOAT               : 'float' ;
+CONST               : 'const' ;
+BREAK               : 'break' ;
+RANGE               : 'range' ;
+FALSE               : 'false' ;
+TRUE                : 'true' ;
+FUNC                : 'func' ;
+TYPE                : 'type' ;
+ELSE                : 'else' ;
+FOR                 : 'for' ;
+INT                 : 'int' ;
+VAR                 : 'var' ;
+NIL                 : 'nil' ;
+IF                  : 'if' ;
+
+/*
+    operators:
+    - +, -, *, /, %
+    - ==, !=, <, <=, >, >=
+    - &&, ||, !
+    - =, +=, -=, *=, /=, %=
+    - .
+ */
+// longer rule
+AND                     : '&&' ;
+OR                      : '||' ;
+ADD_ASS                 : '+=' ;
+SUB_ASS                 : '-=' ;
+MUL_ASS                 : '*=' ;
+DIV_ASS                 : '/=' ;
+MOD_ASS                 : '%=' ;
+ASS                     : ':=' ;
+DOUBLE_EQUAL            : '==' ;
+NOT_EQUAL               : '!=' ;
+LESS_THAN_OR_EQUAL      : '<=' ;
+GREATER_THAN_OR_EQUAL   : '>=' ;
+// shorter rule
+ADD                     : '+' ;
+SUB                     : '-' ;
+MUL                     : '*' ;
+DIV                     : '/' ;
+MOD                     : '%' ;
+EQUAL                   : '=' ;
+LESS_THAN               : '<' ;
+GREATER_THAN            : '>' ;
+DOT                     : '.' ;
+NOT                     : '!' ;
+
+/*
+    separators:
+    - (, )
+    - {, }
+    - [, ]
+    - ,
+    - ;
+ */
+LP                      : '(' ;
+RP                      : ')' ;
+LB                      : '[' ;
+RB                      : ']' ;
+LCB                     : '{' ;
+RCB                     : '}' ;
+COMMA                   : ',' ;
+// This COLON doesn't have in the separator
+COLON                   : ':' ;
+SEMICOLON               : ';' ;
+
+/*
+    literals:
+    - integer literal
+        + decimal
+        + binary
+        + octal
+        + hexa
+    - floating-point literal
+    - string literal
+    - boolean literal
+    - nil literal
+*/
+DECIMAL_INTEGER         : '0' | [1-9] [0-9]* ;
+BINARY_INTEGER          : '0' [bB] [0-1]+ ;
+OCTAL_INTEGER           : '0' [oO] [0-7]+ ;
+HEXA_INTEGER            : '0' [xX] [0-9a-fA-F]+ ;
+// FLOATING_POINT is refering DOT again which is not intuitive
+FLOATING_POINT          : INTEGER '.' FRACTION? EXPONENT? ;
+    fragment INTEGER            : DIGIT+ ;
+    fragment FRACTION           : DIGIT+ ;
+    fragment EXPONENT           : [eE] [+-]? DIGIT+ ;
+// handling raw characters
+// raw \n -> X
+// raw \t -> O
+// raw \r -> X
+STRING_LITERAL          : '"' (~[\\"\r\n] | ESCAPE_SEQUENCE)* '"';
+    // \n
+    // \t
+    // \r
+    // \"
+    // \\
+    fragment ESCAPE_SEQUENCE    : '\\' [ntr"\\];
+/* 
+    identifiers:
+    - variable names
+    - constant names
+    - type names
+    - function names
+    - other user-defined elements
+*/
+ID                     : (LETTER | UNDERSCORE) (LETTER | DIGIT | UNDERSCORE)*;
+    fragment LETTER         : [a-zA-Z] ;
+    fragment DIGIT          : [0-9] ;
+    fragment UNDERSCORE     : '_' ;
+
+// Comments
+SINGLE_LINE_COMMENT : '//' ~[\r\n]*                             -> skip;
+// first version: MULTI_LIME_COMMENT  :  '/*' .*? '*/';             --- Dont support nested comment
+// second version: NON-GREEDY
+//        + if nested many times and correctly    --- Only one token
+//        + Can allow multiple multi-line comment, each with nested and doesn't cause problem
+//        + Can handle the case of /* com/*ment */
+//        + Have the same behaviour as real Go: /* com*/ment */
+//        + Can handle this one: /* com/*/**/*/ment */
+MULTI_LIME_COMMENT  :  '/*' (MULTI_LIME_COMMENT | .)*? '*/'     -> skip;
+
+// blanks, tabs, formfeeds, carriage returns and newlines
+WHITESPACE          : [ \t\f\r]+                                -> skip ;
+
+/*
+    How nextToken() works
+    - Check If We Are at the End of Input (EOF):
+
+    - Try to Match a Token Using Lexer Rules:
+
+    - If a rule matches, it triggers an action (e.g., emit(), skip(), or more()).
+
+    - If no action is specified, the default behavior is to emit the token.
+
+    - Then the { ... } block is called whenever the lexer matches the NEWLINE token.
+
+    - AFTER executing the action, the lexer either emits or skips the NEWLINE token 
+    (depending on whether it calls emit(), skip(), or does nothing).
+ */
+NEWLINE             : '\n'
+{
+# logic to decide whether to skip or replace the NEWLINE with a SEMICOLON token
+# add NIL literal as it can be part of the expression
+must_be_replaced_when_before_NEWLINE_set = {
+    # ID
+    self.ID,
+    # integer
+    self.DECIMAL_INTEGER,
+    self.BINARY_INTEGER,
+    self.OCTAL_INTEGER,
+    self.HEXA_INTEGER,
+    # floating point
+    self.FLOATING_POINT,
+    # boolean
+    self.TRUE,
+    self.FALSE,
+    # string literal
+    self.STRING_LITERAL,
+    # keyword for type
+    self.INT,
+    self.FLOAT,
+    self.BOOLEAN,
+    self.STRING,
+    # keywords
+    self.RETURN,
+    self.CONTINUE,
+    self.BREAK,
+    # closed token
+    self.RP,
+    self.RB,
+    self.RCB,
+    # nil
+    self.NIL
+}
+if self.previousTokenType in must_be_replaced_when_before_NEWLINE_set:
+    # set the current token to be semicolon_token   -> emit() -> emitToken()
+    self.type = self.SEMICOLON
+    self.text = ';'
+    self.emit()
+    # self.emitToken(semicolon_token)
+else:
+    self.skip()
+};
+
+
+/*
+    How parser interact with lexer
+    - When the parser requests a token, CommonTokenStream calls lexer.nextToken()
+
+    - Step 1: skip() Marks the Token for Skipping
+    self.skip() prevents the token from being returned to the parser.
+    ANTLR immediately calls nextToken() again to fetch another token.
+
+    - If NEWLINE is skipped, the parser never sees it, and previousTokenType 
+    remains unchanged.
+
+    - CommonTokenStream calls lexer.nextToken() repeatedly to preload tokens.
+
+    - It stores tokens internally, except skipped tokens.
+
+    - The parser fetches tokens from CommonTokenStream, not directly from the lexer.
+
+    - The skipped token is never added to CommonTokenStream.
+
+    - The lexer calls nextToken() again to get a new token.
+*/
+
+// Handling errors
+/*
+    - UnclosedString(<unclosed string>): when the lexer detects an unterminated
+    string. The unclosed string is from the beginning of the string (without the
+    quote) to the newline or end of file, exclusively.
+ */
+
+/*
+    - No lexer errors are raised 
+    because every part of the input matches a valid token rule.
+
+    - ven though "vars" is not a valid keyword, 
+    it still follows the ID rule, so the lexer accepts it.
+
+    - The parser now consumes the tokens generated by the lexer.
+
+    - It tries to match them to the defined grammar rules (syntax rules).
+
+    - Boom! The parser throws a syntax error because "vars" is unexpected.
+
+    - Lexer only produces ErrorToken when it encounters an unrecognized character.
+
+    - If all characters match valid tokens, 
+    the lexer finishes successfully—even if the tokens don't form a valid statement.
+
+    - The parser is responsible for checking 
+    if the sequence of tokens makes sense grammatically.
+*/
+
+//                                                        BAD ESCAPE DETECTION
+ILLEGAL_ESCAPE      : '"' (~[\\"\r\n] | ESCAPE_SEQUENCE)* '\\' ~[ntr"\\]
+{
+    text = self.text
+    raise IllegalEscape(text)
+};
+
+UNCLOSE_STRING      : '"' (~[\\"\r\n] | ESCAPE_SEQUENCE)*
+{
+    text = self.text
+    raise UncloseString(text)
+};
+
+ERROR_CHAR          : .
+{
+    raise ErrorToken(self.text)
+};
+// -------------------------------------------
+
+
+// PARSER RULES
+// Write the grammar using BNF not EBNF
+program             : declaration_list EOF
+                    ;
+    declaration_list    : declaration declaration_list
+                        | declaration
+                        ;
+
+// should not be inside a block
+declaration         : constant_declaration  // global things            O
+                    | variable_declaration  // global things            O
+                    | type_declaration      // struct or interface      O
+                    | function_declaration  // a function               O
+                    ;
+    type_declaration    : struct_declaration
+                        | interface_declaration
+                        ;
+        struct_declaration  : TYPE struct_name STRUCT LCB property_declaration_list RCB statement_end
+                            ;
+            struct_name             : ID
+                                    ;
+            // a non-empty list
+            property_declaration_list   : property_declaration property_declaration_list
+                                        | property_declaration
+                                        ;
+                property_declaration        : property_name type_part statement_end
+                                            ;
+                    property_name               : ID
+                                                ;
+        interface_declaration   : TYPE interface_name INTERFACE LCB method_declaration_list RCB statement_end
+                                ;
+            interface_name          : ID
+                                    ;
+            // non-empty list of method declaration
+            method_declaration_list : method_declaration method_declaration_list
+                                    | method_declaration
+                                    ;
+                method_declaration      : function_name LP parameter_list RP type_part statement_end
+                                        | function_name LP parameter_list RP           statement_end
+                                        ;
+
+    // not the same as C/C++ when the declaration can be separated from function definition
+    function_declaration: function_definition
+                        ;
+        function_definition : normal_function_definition
+                            | method_definition
+                            ;
+            // just add statement_end
+            normal_function_definition  : function_header function_body statement_end
+                                        ;
+                function_header             : FUNC function_name LP parameter_list RP type_part
+                                            | FUNC function_name LP parameter_list RP
+                                            ;
+                    function_name               : ID
+                                                ;
+                    parameter_list              : parameter_prime
+                                                | 
+                                                ;
+                        parameter_prime             : parameter COMMA parameter_prime
+                                                    | parameter
+                                                    ;
+                            // cause ambiguity, but solved based on ANTLR ordering rule
+                            parameter                   : name_type
+                                                        | same_type_list
+                                                        ;
+                                same_type_list          : name_list type_part
+                                                        ;
+                                    name_list               : name COMMA name_list
+                                                            | name
+                                                            ;
+                                        name                    : ID
+                                                                ;
+                                name_type                   : name type_part
+                                                                ;
+                function_body                   : block
+                                                ;
+                    // No need to add semi??? NOTE
+                    block                           : LCB block_member_list RCB
+                                                    ;
+                        // list of nullable block_member, not separated by something
+                        // NOTE - fixing block not nullable
+                        block_member_list               : block_member block_member_list
+                                                        | block_member
+                                                        ;
+                            // NOTE: block inside block
+                            // fixing a block member can't be a just raw block {___} -> SEMI is added ->?
+                            block_member                    : statement
+                                                            // | block
+                                                            ;
+            // NOTE: whether or not, there is a statement end???
+            // CHECK
+            method_definition           : method_header function_body statement_end
+                                        ;
+                method_header               : FUNC LP receiver RP function_name LP parameter_list RP type_part
+                                            | FUNC LP receiver RP function_name LP parameter_list RP
+                                            ;
+                    receiver                    : name type_part
+                                                ; 
+
+// it doesn't contain function_declaration, thus a block should have multiple statements
+// check-out list for AST generation
+statement           : variable_declaration  // O    O
+                    | constant_declaration  // O    O
+                    | assignment_statement  // O    O
+                    | if_statement          // O    O
+                    | for_statement         // O    O
+                    | break_statement       // O    O
+                    | continue_statement    // O    O
+                    | call_statement        // O    O
+                    | return_statement      // O    O
+                    ;
+    // variable_declaration    : VAR variable_name type? initialisation? statement_end;
+    // NOTES
+    // fixing
+    // Comment out the fourth rule, as there must be at least type or initialisation
+    variable_declaration    : VAR variable_name type_part initialisation statement_end
+                            | VAR variable_name type_part                statement_end
+                            | VAR variable_name           initialisation statement_end
+                            // | VAR variable_name                          statement_end
+                            ;
+        variable_name           : ID
+                                ;
+        type_part               : primitive_type     // representing type of variable
+                                | composite_type     // can be type of Struct or Interface (user defined)
+                                | array_type
+                                ;
+            primitive_type          : INT
+                                    | FLOAT
+                                    | BOOLEAN
+                                    | STRING
+                                    ;
+            // parser would allow wrong type, but not the case of semantic analysis
+            composite_type          : ID
+                                    ;
+            // array_type              : dimension_list (primitive_type | composit_type);
+            // should be the expression while the semantic analysis would reject the incorrect one
+            // based on the MiniGo specification:
+            // - only allow integer_literal and constant only
+            // - different from array indexing in expression actually
+            array_type              : dimension_list primitive_type 
+                                    | dimension_list composite_type
+                                    ;
+                dimension_list          : dimension dimension_list 
+                                        | dimension
+                                        ;
+                    dimension               : LB integer_literal RB
+                                            | LB constant        RB
+                                            ;
+                        // the parser cannot determine 
+                        // whether an identifier actually refers to a constant
+                        constant                : ID 
+                                                ;
+        // value must be computable at compile time
+        initialisation          : EQUAL expression
+                                ;
+            expression              : expression OR ex1
+                                    | ex1
+                                    ;
+                ex1                     : ex1 AND ex2
+                                        | ex2 
+                                        ;
+                    ex2                     : ex2 relational_operator ex3
+                                            | ex3
+                                            ;
+                        relational_operator     : DOUBLE_EQUAL
+                                                | NOT_EQUAL
+                                                | LESS_THAN
+                                                | LESS_THAN_OR_EQUAL
+                                                | GREATER_THAN
+                                                | GREATER_THAN_OR_EQUAL
+                                                ;
+                        ex3                     : ex3 binary_add_sub ex4
+                                                | ex4
+                                                ;
+                            binary_add_sub          : ADD
+                                                    | SUB
+                                                    ;
+                            ex4                     : ex4 mul_div_mod ex5
+                                                    | ex5
+                                                    ;
+                                mul_div_mod             : MUL
+                                                        | DIV
+                                                        | MOD
+                                                        ;
+                                ex5                     : unary_not_sub ex5
+                                                        | ex6
+                                                        ;
+                                    unary_not_sub           : NOT
+                                                            | SUB
+                                                            ;
+                                    // get the element in the array (expression)
+                                    // get the element of the struct type
+                                    // call the method of the struct type
+                                    // CHECK -> create MethCall
+                                    ex6                     : ex6 LB expression RB
+                                                            | ex6 DOT function_call     // with the receiver before the DOT operator
+                                                            | ex6 DOT field_name
+                                                            | ex7
+                                                            ;
+                                        ex7                     : literal
+                                                                | variable_name         // can be merged and let semantic analysis to handle??
+                                                                | call
+                                                                | LP expression RP      // result from other operator
+                                                                ;
+                                            call                    : function_call
+                                                                    // | method_call - already represented by DOT operator
+                                                                    ;
+                                                function_call           : function_name LP argument_list RP
+                                                                        ;
+                                                    argument_list           : argument_prime
+                                                                            | 
+                                                                            ;
+                                                        argument_prime          : argument COMMA argument_prime
+                                                                                | argument
+                                                                                ;
+                                                            argument                : expression
+                                                                                    ;
+                                            literal                 : integer_literal
+                                                                    | FLOATING_POINT
+                                                                    | STRING_LITERAL
+                                                                    | boolean_literal
+                                                                    | NIL
+                                                                    | array_literal
+                                                                    | struct_literal
+                                                                    ;
+                                                integer_literal         : DECIMAL_INTEGER
+                                                                        | BINARY_INTEGER
+                                                                        | OCTAL_INTEGER
+                                                                        | HEXA_INTEGER
+                                                                        ;
+                                                boolean_literal         : TRUE
+                                                                        | FALSE;
+                                                // must always have the [array_type] part
+                                                // but inside, it can be 
+                                                // expression (in the case of multiple array): allow array_type
+                                                // not the expression but in the type of LCB
+                                                // NOTE: the value inside must be fixed
+                                                // fixing-array_literal can't be nullable
+                                                array_literal           : array_type LCB array_element_list RCB
+                                                                        ;
+                                                    array_element_list      : array_element COMMA array_element_list
+                                                                            | array_element
+                                                                            ;
+                                                            // allowing type deduction
+                                                            // Take one part of the array_literal
+                                                            // array_literal           : [array_type] (LCB element_array_list RCB)
+                                                            // NOTE: must be corrected
+                                                        array_element           : special_literal                 // which can allow typed array literal
+                                                                                | constant
+                                                                                | LCB array_element_list RCB      // can be seen as another array_literal
+                                                                                ;
+                                                            // there is no array literal
+                                                            special_literal         : integer_literal
+                                                                                    | FLOATING_POINT
+                                                                                    | STRING_LITERAL
+                                                                                    | boolean_literal
+                                                                                    | NIL
+                                                                                    | struct_literal
+                                                                                    ;
+                                                struct_literal          : struct_name LCB struct_element_list RCB
+                                                                        ;
+                                                    struct_element_list     : struct_element_prime
+                                                                            |
+                                                                            ;
+                                                        struct_element_prime    : struct_element COMMA struct_element_prime
+                                                                                | struct_element
+                                                                                ;
+                                                            struct_element          : field_name COLON expression
+                                                                                    ;
+                                                                field_name              : ID
+                                                                                        ;
+        statement_end       : SEMICOLON 
+                            // | NEWLINE
+                            ;
+    // different between Go and C/C++
+    // In Go, const means "absolutely immutable and evaluable at compile time."
+    // Go doesn't allow 
+    // var z = 100
+	// const m = z + 100
+    // -----
+    // In C/C++, const only means "this value cannot be changed after initialization," 
+    // but it does not have to be evaluable at compile time.
+    // In C++, const int y = x + 10; is allowed, but x might change later, causing confusion.
+    // note about constexpr
+    constant_declaration    : CONST const_name EQUAL value statement_end;
+        const_name              : ID;
+        // should be a general expression (no need to separate them)
+        // Go does not allow const for array, struct, slice, or map types.
+        // Valid constant types: int, float, bool, string, complex.
+        value                   : expression
+                                // | literal_constant-redundant, as expression can be resolve to literal actually
+                                ;
+            // literal_constant        : integer_literal
+            //                         | FLOATING_POINT
+            //                         | STRING_LITERAL
+            //                         | boolean_literal
+            //                         ;
+    assignment_statement    : lhs assignment_operator rhs statement_end
+                            ;
+        // note, we must allow them to be chained together
+        // allow expression in []
+        // the left hand side is separately defined from the expression
+        // only ASS can be changed to declaration if the expression in the right hand side
+        // does contain the value
+        // the other operator will be rejected by semantic analysis
+
+        // Here, both foo().bar()[1].baz(); and myArray[2][3] use chaining, 
+        // but they are not part of expressions. 
+        // This means the parser must recognize them without relying on 
+        // the normal expression grammar.
+
+        // parse the same as the expression actually
+        // lhs                     : lhs DOT field_name
+        //                         | lhs LB expression RB
+        //                         | scalar_variable
+        //                         ;
+        lhs                     : expression DOT field_name
+                                // CHECK list [ expression ]
+                                | expression LB expression RB
+                                | scalar_variable
+                                ;
+            scalar_variable         : ID
+                                    ;
+        assignment_operator     : ASS       
+                                // the only operator, that can be changed from assignment to declaration
+                                | ADD_ASS
+                                | SUB_ASS
+                                | MUL_ASS
+                                | DIV_ASS
+                                | MOD_ASS
+                                ;
+        rhs                     : expression
+                                ;   // value must be compatible with the type of lhs
+    // How about the statement_end which enforces the ending of the statement ???
+    // must be check again for correct AST generation
+    // may not explicitly represented in AST
+    // NOTE: adding statement_end???
+    // else if list
+    // NOTE can be define as recursive rule
+    // CHECK
+    if_statement            : IF LP boolean_expression RP block                         statement_end
+                            | IF LP boolean_expression RP block              else_block statement_end
+                            | IF LP boolean_expression RP block else_if_list            statement_end
+                            | IF LP boolean_expression RP block else_if_list else_block statement_end
+                            ;
+        boolean_expression      : expression
+                                ;
+        else_if_list            : else_if else_if_list | else_if 
+                                ;
+            else_if                 : ELSE IF LP boolean_expression RP block
+                                    ;
+        else_block                  : ELSE block
+                                ;
+    /*
+        for statement: 
+            - basic form
+            - form with initialization
+            - form for iterating over an array
+     */
+    // NOTE: add statement_end
+    for_statement           : basic_for_statement
+                            | ini_for_statement
+                            | range_for_statement
+                            ;
+        // change to condition for synchronisation
+        basic_for_statement     : FOR condition block statement_end
+                                ;
+        // if you want the statement_end to be nothing, then in the same line of [}
+        // you would continue to write the program -> no SEMI is inserted
+        // if you enter -> SEMI, there must be grammar SEMI to catch this as a part 
+        // of the grammar
+        ini_for_statement       : FOR ini SEMICOLON condition SEMICOLON update block statement_end
+                                ;
+            // there can be mistake at that point, but I choose to risk
+            // NOTE: omit the declaration in for loop
+            ini                     : init_assignment
+                                    | init_declaration
+                                    ;
+                init_assignment         : for_lhs assignment_operator rhs
+                                        ;
+                    for_lhs                 : scalar_variable
+                                            ;
+                init_declaration        : VAR variable_name type_part initialisation
+                                        | VAR variable_name           initialisation
+                                        ;
+            condition               : boolean_expression
+                                    ;
+            update                  : for_lhs assignment_operator rhs
+                                    ;
+        range_for_statement     : FOR index COMMA value_array ASS RANGE array block statement_end
+                                ;
+            index                   : ID
+                                    ;   // if it is an UNDERSCORE character -> may be handled in semantic analysis
+            value_array             : ID
+                                    ;
+            // should be defined as expression
+            // element access
+            // return from function
+            array                   : expression
+                                    ;
+                                // inside the for_statement handled by semantic analysis (context stack)
+    break_statement             : BREAK statement_end
+                                ;
+    continue_statement          : CONTINUE statement_end
+                                ;
+    // Here, both foo().bar()[1].baz(); and myArray[2][3] use chaining, 
+    // but they are not part of expressions. 
+    // This means the parser must recognize them without relying on 
+    // the normal expression grammar.
+    call_statement              : function_call_statement
+                                | method_call_statement
+                                ;
+        function_call_statement     : function_call statement_end
+                                    ;
+        // problematic
+        // NOTE
+        method_call_statement       : expression DOT function_call statement_end
+                                    ;
+    return_statement            : RETURN expression statement_end
+                                | RETURN            statement_end
+                                ;
+/*
+    what semantic analysis (semantic checking) do, not the parser's job: 
+        - scope
+        - type compatible
+        - operation is allowed for a type
+        - assignment but not declaration -> add to the symbol table
+        - scope hierarchy
+ */
+// -------------------------------------------
