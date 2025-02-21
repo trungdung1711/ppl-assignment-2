@@ -3,17 +3,32 @@ from MiniGoParser import MiniGoParser
 from AST import *
 
 class ASTGeneration(MiniGoVisitor):
-    def visitProgram(self,ctx:MiniGoParser.ProgramContext):
-        return Program([self.visit(i) for i in ctx.decl()])
 
-    def visitDecl(self,ctx:MiniGoParser.DeclContext):
-        return self.visit(ctx.getChild(0))
 
-    def visitFuncdecl(self,ctx:MiniGoParser.FuncdeclContext):
-        return FuncDecl(ctx.ID().getText(),[],VoidType(),Block([]))
-    	
-    def visitVardecl(self,ctx:MiniGoParser.VardeclContext):
-        return VarDecl(ctx.ID().getText(),IntType(),None)
+    def visitInteger_literal(self, ctx:MiniGoParser.Integer_literalContext):
 
+        if ctx.DECIMAL_INTEGER():
+            text = ctx.DECIMAL_INTEGER().getText()
+            base = 10
+        elif ctx.BINARY_INTEGER():
+            text = ctx.BINARY_INTEGER().getText()
+            base = 2
+        elif ctx.OCTAL_INTEGER():
+            text = ctx.OCTAL_INTEGER().getText()
+            base = 8
+        elif ctx.HEXA_INTEGER():
+            text = ctx.HEXA_INTEGER().getText()
+            base = 16
+        
+        return IntLiteral(value=int(x=text, base=base))
     
 
+    def visitBoolean_literal(self, ctx:MiniGoParser.Boolean_literalContext):
+        if ctx.TRUE():
+            return BooleanLiteral(value=True)
+        elif ctx.FALSE():
+            return BooleanLiteral(value=False)
+        
+
+    def visitBreak_statement(self, ctx:MiniGoParser.Break_statementContext):
+        pass
