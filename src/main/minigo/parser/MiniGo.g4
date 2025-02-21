@@ -443,6 +443,7 @@ declaration         : constant_declaration  // global things            O
                                                         ;
                             // NOTE: block inside block
                             // fixing a block member can't be a just raw block {___} -> SEMI is added ->?
+                            // CHECK
                             block_member                    : statement
                                                             // | block
                                                             ;
@@ -472,9 +473,9 @@ statement           : variable_declaration  // O    O
     // NOTES
     // fixing
     // Comment out the fourth rule, as there must be at least type or initialisation
-    variable_declaration    : VAR ID type_part initialisation SEMICOLON
-                            | VAR ID type_part                SEMICOLON
-                            | VAR ID           initialisation SEMICOLON
+    variable_declaration    : VAR ID type_part EQUAL expression SEMICOLON
+                            | VAR ID type_part                  SEMICOLON
+                            | VAR ID           EQUAL expression SEMICOLON
                             // | VAR ID                          
                             ;
         // variable_name           : ID 2/21/2025 replace variable_name -> 
@@ -483,6 +484,7 @@ statement           : variable_declaration  // O    O
                                 | ID                 // can be type of Struct or Interface (user defined)
                                 | array_type
                                 ;
+            // MAP
             primitive_type          : INT
                                     | FLOAT
                                     | BOOLEAN
@@ -496,12 +498,15 @@ statement           : variable_declaration  // O    O
             // based on the MiniGo specification:
             // - only allow integer_literal and constant only
             // - different from array indexing in expression actually
+            // MAP
             array_type              : dimension_list primitive_type 
                                     | dimension_list ID
                                     ;
+                // MAP
                 dimension_list          : dimension dimension_list 
                                         | dimension
                                         ;
+                    // MAP
                     dimension               : LB integer_literal RB
                                             | LB ID              RB
                                             ;
@@ -510,8 +515,8 @@ statement           : variable_declaration  // O    O
                         // constant                : ID 2/21/2025 replace constant
                         //                         ;
         // value must be computable at compile time
-        initialisation          : EQUAL expression
-                                ;
+        // initialisation          : EQUAL expression 2/21/2025
+        //                         ;
             expression              : expression OR ex1
                                     | ex1
                                     ;
@@ -599,6 +604,7 @@ statement           : variable_declaration  // O    O
                                                 // not the expression but in the type of LCB
                                                 // NOTE: the value inside must be fixed
                                                 // fixing-array_literal can't be nullable
+                                                // CHECK
                                                 array_literal           : array_type LCB array_element_list RCB
                                                                         ;
                                                     array_element_list      : array_element COMMA array_element_list
@@ -660,7 +666,7 @@ statement           : variable_declaration  // O    O
             //                         | STRING_LITERAL
             //                         | boolean_literal
             //                         ;
-    assignment_statement    : lhs assignment_operator rhs SEMICOLON
+    assignment_statement    : lhs assignment_operator expression SEMICOLON
                             ;
         // note, we must allow them to be chained together
         // allow expression in []
@@ -695,8 +701,8 @@ statement           : variable_declaration  // O    O
                                 | DIV_ASS
                                 | MOD_ASS
                                 ;
-        rhs                     : expression
-                                ;   // value must be compatible with the type of lhs
+        // rhs                     : expression 2/21/2025
+        //                         ;   // value must be compatible with the type of lhs
     // How about the  which enforces the ending of the statement ???
     // must be check again for correct AST generation
     // may not explicitly represented in AST
@@ -742,18 +748,18 @@ statement           : variable_declaration  // O    O
             ini                     : init_assignment
                                     | init_declaration
                                     ;
-                init_assignment         : ID assignment_operator rhs
+                init_assignment         : ID assignment_operator expression
                                         ;
                     // for_lhs                 : ID 2/25/2025
                     //                         ;
-                init_declaration        : VAR ID type_part initialisation
-                                        | VAR ID           initialisation
+                init_declaration        : VAR ID type_part EQUAL expression
+                                        | VAR ID           EQUAL expression
                                         ;
             // condition               : expression
             //                         ;
-            update                  : ID assignment_operator rhs
+            update                  : ID assignment_operator expression
                                     ;
-        range_for_statement     : FOR ID COMMA ID ASS RANGE array block SEMICOLON
+        range_for_statement     : FOR ID COMMA ID ASS RANGE expression block SEMICOLON
                                 ;
             // index                   : ID 2/21/2025
             //                         ;   // if it is an UNDERSCORE character -> may be handled in semantic analysis
@@ -762,8 +768,8 @@ statement           : variable_declaration  // O    O
             // should be defined as expression
             // element access
             // return from function
-            array                   : expression
-                                    ;
+            // array                   : expression 2/21/2025
+            //                         ;
                                 // inside the for_statement handled by semantic analysis (context stack)
     // MAP
     break_statement             : BREAK SEMICOLON
