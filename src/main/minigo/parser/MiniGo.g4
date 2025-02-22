@@ -710,11 +710,17 @@ statement           : variable_declaration  // O    O
     // else if list
     // NOTE can be define as recursive rule
     // CHECK
-    if_statement            : IF LP expression RP block                         SEMICOLON
-                            | IF LP expression RP block              else_block SEMICOLON
-                            | IF LP expression RP block else_if_list            SEMICOLON
-                            | IF LP expression RP block else_if_list else_block SEMICOLON
+    if_statement            : IF LP expression RP block else_part SEMICOLON
+                            | IF LP expression RP block           SEMICOLON
+                            // | IF LP expression RP block             SEMICOLON
+                            // | IF LP expression RP block   SEMICOLON
                             ;
+        if_statement_recursive  : IF LP expression RP block else_part
+                                | IF LP expression RP block
+                                ;
+        else_part               : ELSE if_statement_recursive
+                                | ELSE block
+                                ;
         // boolean_expression      : expression 2/21/2025
         //                         ;
         else_if_list            : else_if else_if_list | else_if 

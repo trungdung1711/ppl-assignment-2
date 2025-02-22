@@ -60,3 +60,19 @@ class ASTGeneration(MiniGoVisitor):
 
     def visitDimension(self, ctx:MiniGoParser.DimensionContext):
         return self.visit(ctx.integer_literal()) if ctx.integer_literal() else Id(name=ctx.ID().getText())
+    
+
+    def visitStruct_literal(self, ctx:MiniGoParser.Struct_literalContext):
+        return self.visitChildren(ctx)
+    
+
+    def visitStruct_element_list(self, ctx:MiniGoParser.Struct_element_listContext):
+        return self.visitChildren(ctx)
+    
+
+    def visitStruct_element_prime(self, ctx:MiniGoParser.Struct_element_primeContext):
+        return self.visitChildren(ctx)
+    
+
+    def visitStruct_element(self, ctx:MiniGoParser.Struct_elementContext):
+        return self.visitChildren(ctx)
