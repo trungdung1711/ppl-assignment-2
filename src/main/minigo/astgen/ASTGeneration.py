@@ -161,3 +161,35 @@ class ASTGeneration(MiniGoVisitor):
 
     def visitStruct_element(self, ctx:MiniGoParser.Struct_elementContext):
         return (ctx.ID().getText(), self.visit(ctx.expression()))
+
+
+    '''
+    #==============================
+    AST: AST.ArrayCell
+    - arr : Expr
+    - idx : List[Expr]
+    AST: AST.FieldAccess
+    - receiver : Expr
+    - field : str
+    AST: AST.Id
+    - name : str
+    #==============================
+    '''
+    def visitLhs(self, ctx:MiniGoParser.LhsContext):
+        return self.visitChildren(ctx)
+    
+
+    def visitField_access(self, ctx:MiniGoParser.Field_accessContext):
+        return self.visitChildren(ctx)
+    
+
+    def visitArray_index(self, ctx:MiniGoParser.Array_indexContext):
+        return self.visitChildren(ctx)
+    
+
+    def visitIndex_list(self, ctx:MiniGoParser.Index_listContext):
+        return self.visitChildren(ctx)
+    
+
+    def visitIndex(self, ctx:MiniGoParser.IndexContext):
+        return self.visitChildren(ctx)

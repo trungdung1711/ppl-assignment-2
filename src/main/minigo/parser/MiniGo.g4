@@ -558,7 +558,9 @@ statement           : variable_declaration  // O    O
                                     // get the element of the struct type
                                     // call the method of the struct type
                                     // CHECK -> create MethCall
-                                    ex6                     : ex6 LB expression RB
+                                    // 2/25/2025 modify the array access expression to
+                                    // follow the AST's structure
+                                    ex6                     : ex6 index_list            // array access
                                                             | ex6 DOT function_call     // with the receiver before the DOT operator
                                                             | ex6 DOT ID
                                                             | ex7
