@@ -63,16 +63,16 @@ class ASTGeneration(MiniGoVisitor):
     
 
     def visitStruct_literal(self, ctx:MiniGoParser.Struct_literalContext):
-        return self.visitChildren(ctx)
+        return StructLiteral(name=ctx.ID().getText(), elements=self.visit(ctx.struct_element_list()))
     
 
     def visitStruct_element_list(self, ctx:MiniGoParser.Struct_element_listContext):
-        return self.visitChildren(ctx)
+        return [] if ctx.getChildCount() == 0 else self.visit(ctx.struct_element_prime())
     
 
     def visitStruct_element_prime(self, ctx:MiniGoParser.Struct_element_primeContext):
-        return self.visitChildren(ctx)
+        return [self.visit(ctx.struct_element())] if ctx.getChildCount() == 1 else [self.visit(ctx.struct_element())] + self.visit(ctx.struct_element_prime())
     
 
     def visitStruct_element(self, ctx:MiniGoParser.Struct_elementContext):
-        return self.visitChildren(ctx)
+        return (ctx.ID().getText(), self.visit(ctx.expression()))

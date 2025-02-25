@@ -410,13 +410,14 @@ class BooleanLiteral(PrimLit):
     def accept(self, v, param):
         return v.visitBooleanLiteral(self, param)
 
+# How about ID??? CHECK
 NestedList = PrimLit | list['NestedList']
 def nested2Str(dat: NestedList):
     if isinstance(dat,list):
         return '[' + ','.join(nested2Str(i) for i in dat) + ']'
     else:
         return str(dat)
-
+# Should contain Expr CHECK
 @dataclass
 class ArrayLiteral(Literal):
     dimens:List[int]

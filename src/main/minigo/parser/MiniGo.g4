@@ -499,6 +499,8 @@ statement           : variable_declaration  // O    O
             // - only allow integer_literal and constant only
             // - different from array indexing in expression actually
             // MAP
+            // should be recursively defined, as like Go
+            // CHECK
             array_type              : dimension_list primitive_type 
                                     | dimension_list ID
                                     ;
@@ -626,14 +628,18 @@ statement           : variable_declaration  // O    O
                                                                                     | NIL
                                                                                     | struct_literal
                                                                                     ;
+                                                // MAP
                                                 struct_literal          : ID LCB struct_element_list RCB
                                                                         ;
+                                                    // MAP
                                                     struct_element_list     : struct_element_prime
                                                                             |
                                                                             ;
+                                                        // MAP
                                                         struct_element_prime    : struct_element COMMA struct_element_prime
                                                                                 | struct_element
                                                                                 ;
+                                                            // MAP
                                                             struct_element          : ID COLON expression
                                                                                     ;
                                                                 // field_name              : ID 2/21/2025 replace field_name
