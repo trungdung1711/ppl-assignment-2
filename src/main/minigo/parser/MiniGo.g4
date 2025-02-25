@@ -606,22 +606,27 @@ statement           : variable_declaration  // O    O
                                                 // not the expression but in the type of LCB
                                                 // NOTE: the value inside must be fixed
                                                 // fixing-array_literal can't be nullable
-                                                // CHECK
+                                                // MAP
                                                 array_literal           : array_type LCB array_element_list RCB
                                                                         ;
+                                                    // MAP
                                                     array_element_list      : array_element COMMA array_element_list
                                                                             | array_element
                                                                             ;
                                                             // allowing type deduction
                                                             // Take one part of the array_literal
                                                             // array_literal           : [array_type] (LCB element_array_list RCB)
-                                                            // NOTE: must be corrected
-                                                        array_element           : special_literal                 // which can allow typed array literal
-                                                                                | ID
+                                                            // CHECK!
+                                                            // 25/2/2025 change the name for this special literal
+                                                        // MAP
+                                                        array_element           : array_element_literal           // which can allow typed array literal
+                                                                                // | ID                           // Just contain PrimLit (only), not ID
                                                                                 | LCB array_element_list RCB      // can be seen as another array_literal
                                                                                 ;
+                                                                                // 2/25/2025 removing the ID part, as alligned with the AST teacher's structure, NO ID
                                                             // there is no array literal
-                                                            special_literal         : integer_literal
+                                                            // MAP
+                                                            array_element_literal   : integer_literal
                                                                                     | FLOATING_POINT
                                                                                     | STRING_LITERAL
                                                                                     | boolean_literal
@@ -691,12 +696,21 @@ statement           : variable_declaration  // O    O
         //                         | lhs LB expression RB
         //                         | scalar_variable
         //                         ;
-        // CHECK
-        lhs                     : expression DOT ID
-                                // CHECK list [ expression ]
-                                | expression LB expression RB
+        // 2/25/2024 fixing the lhs rule for alignment with the AST
+        // more specific case of the lhs
+        lhs                     : field_access
+                                | array_index
                                 | ID
                                 ;
+            field_access            : expression DOT ID
+                                    ;
+            array_index             : expression index_list
+                                    ;
+                index_list              : index index_list
+                                        | index
+                                        ;
+                index                   : LB expression RB
+                                        ;
             // scalar_variable         : ID 2/21/2025
             //                         ;
         assignment_operator     : ASS       
