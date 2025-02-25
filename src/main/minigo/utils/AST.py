@@ -91,7 +91,7 @@ class ConstDecl(Decl,BlockMember):
 @dataclass
 class FuncDecl(Decl):
     name: str
-    params: List[VarDecl]
+    params: List[ParamDecl]
     retType: Type # VoidType if there is no return type
     body: Block
 
@@ -219,8 +219,8 @@ class Assign(Stmt):
 @dataclass
 class If(Stmt):
     expr:Expr
-    thenStmt:Block
-    elseStmt:Block # None if there is no else
+    thenStmt:Stmt
+    elseStmt:Stmt # None if there is no else
 
     def __str__(self):
         return "If(" + str(self.expr) + "," + str(self.thenStmt) + ("" if (self.elseStmt is None) else "," + str(self.elseStmt)) + ")"
@@ -410,17 +410,16 @@ class BooleanLiteral(PrimLit):
     def accept(self, v, param):
         return v.visitBooleanLiteral(self, param)
 
-# How about ID??? CHECK
 NestedList = PrimLit | list['NestedList']
 def nested2Str(dat: NestedList):
     if isinstance(dat,list):
         return '[' + ','.join(nested2Str(i) for i in dat) + ']'
     else:
         return str(dat)
-# Should contain Expr CHECK
+
 @dataclass
 class ArrayLiteral(Literal):
-    dimens:List[int]
+    dimens:List[Expr]
     eleType: Type
     value: NestedList
 
