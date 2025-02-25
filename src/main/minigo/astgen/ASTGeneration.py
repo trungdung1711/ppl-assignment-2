@@ -217,3 +217,30 @@ class ASTGeneration(MiniGoVisitor):
 
     def visitElse_part(self, ctx:MiniGoParser.Else_partContext):
         return self.visit(ctx.if_statement_recursive()) if ctx.if_statement_recursive() else self.visit(ctx.block())
+    
+
+    '''
+    #==============================
+    AST: AST.FuncCall
+    - funName : str
+    - args : List[Expr]
+    #==============================
+    '''
+    def visitCall_statement(self, ctx:MiniGoParser.Call_statementContext):
+        return self.visitChildren(ctx)
+    
+
+    def visitFunction_call_statement(self, ctx:MiniGoParser.Function_call_statementContext):
+        return self.visitChildren(ctx)
+
+
+    '''
+    #==============================
+    AST: AST.MethCall
+    - receiver : Expr
+    - metName : str
+    - args : List[Expr]
+    #==============================
+    '''
+    def visitMethod_call_statement(self, ctx:MiniGoParser.Method_call_statementContext):
+        return self.visitChildren(ctx)

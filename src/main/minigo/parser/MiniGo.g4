@@ -560,31 +560,30 @@ statement           : variable_declaration  // O    O
                                     // CHECK -> create MethCall
                                     // 2/25/2025 modify the array access expression to
                                     // follow the AST's structure
-                                    ex6                     : ex6 index_list            // array access
-                                                            | ex6 DOT function_call     // with the receiver before the DOT operator
-                                                            | ex6 DOT ID
-                                                            | ex7
+                                    ex6                     : ex6 index_list                     // array access
+                                                            | ex6 DOT ID LP argument_list RP     // with the receiver before the DOT operator
+                                                            | ex6 DOT ID                         // 2/25/2025 - deleting intermediate function_call rule
+                                                            | ex7                                // at this point -> create MethCall()
                                                             ;
                                         ex7                     : literal
-                                                                | ID                    // can be merged and let semantic analysis to handle??
-                                                                | call
-                                                                | LP expression RP      // result from other operator
-                                                                ;
+                                                                | ID                        // can be merged and let semantic analysis to handle??
+                                                                | ID LP argument_list RP    // 2/25/2025 - deleting intermediate parser rule
+                                                                | LP expression RP          // result from other operator
+                                                                ;                           // at this point -> create FuncCall
                                             // CHECK
-                                            call                    : function_call
-                                                                    // | method_call - already represented by DOT operator
-                                                                    ;
+                                            // call                    : function_call 2/25/2025 -> removing unused parser rule
+                                            //                         // | method_call - already represented by DOT operator
+                                            //                         ;
                                                 function_call           : ID LP argument_list RP
                                                                         ;
                                                     argument_list           : argument_prime
                                                                             | 
                                                                             ;
-                                                        // CHECK
-                                                        argument_prime          : expression COMMA argument_prime
-                                                                                | expression
+                                                        argument_prime          : argument COMMA argument_prime
+                                                                                | argument
                                                                                 ;
-                                                            // argument                : expression 2/21/2025
-                                                            //                         ;
+                                                            argument                : expression
+                                                                                    ;
                                             literal                 : integer_literal
                                                                     | FLOATING_POINT
                                                                     | STRING_LITERAL
@@ -819,14 +818,21 @@ statement           : variable_declaration  // O    O
     // but they are not part of expressions. 
     // This means the parser must recognize them without relying on 
     // the normal expression grammar.
+
+    // CHECK, must create the same FuncCall and MethCall
+    // with expression -> need modify to be unified in AST
     call_statement              : function_call_statement
                                 | method_call_statement
                                 ;
-        function_call_statement     : function_call SEMICOLON
+        function_call_statement     : ID LP argument_list RP SEMICOLON
+                                    // function_call SEMICOLON - 2/25/2025 deleting intermediate rule
                                     ;
         // problematic
         // NOTE
-        method_call_statement       : expression DOT function_call SEMICOLON
+        // grammartically prevent weird expression
+        // but unified CallExpr
+        method_call_statement       : expression DOT ID LP argument_list RP SEMICOLON
+                                    // expression DOT function_call SEMICOLON - 2/25/2025 deleting intermediate rule
                                     ;
     // MAP
     return_statement            : RETURN expression SEMICOLON
