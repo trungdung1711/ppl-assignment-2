@@ -736,26 +736,31 @@ statement           : variable_declaration  // O    O
     // NOTE: adding ???
     // else if list
     // NOTE can be define as recursive rule
-    // CHECK
+    // CHECK - 2/25/2025 - modify if_statement for AST structure, solving the
+    // SEMI at the end of the if_statement
+    // MAP
     if_statement            : IF LP expression RP block else_part SEMICOLON
                             | IF LP expression RP block           SEMICOLON
                             // | IF LP expression RP block             SEMICOLON
                             // | IF LP expression RP block   SEMICOLON
                             ;
+        // same as if_statement but doesn't have SEMI at the end -> allow recursive in else part
+        // MAP
         if_statement_recursive  : IF LP expression RP block else_part
                                 | IF LP expression RP block
                                 ;
+        // MAP
         else_part               : ELSE if_statement_recursive
                                 | ELSE block
                                 ;
         // boolean_expression      : expression 2/21/2025
         //                         ;
-        else_if_list            : else_if else_if_list | else_if 
-                                ;
-            else_if                 : ELSE IF LP expression RP block
-                                    ;
-        else_block                  : ELSE block
-                                ;
+        // else_if_list            : else_if else_if_list | else_if 
+        //                         ;
+            // else_if                 : ELSE IF LP expression RP block 2/25/2025 moving to use if_statement_recursive
+            //                         ;                                         to align the AST structure
+        // else_block                  : ELSE block
+        //                             ;
     /*
         for statement: 
             - basic form
