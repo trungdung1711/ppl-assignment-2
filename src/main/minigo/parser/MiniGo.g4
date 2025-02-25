@@ -700,22 +700,27 @@ statement           : variable_declaration  // O    O
         //                         ;
         // 2/25/2024 fixing the lhs rule for alignment with the AST
         // more specific case of the lhs
+        // MAP
         lhs                     : field_access
                                 | array_index
                                 | ID
                                 ;
+            // MAP in expression, we would have to map again
             field_access            : expression DOT ID
                                     ;
+            // MAP
             array_index             : expression index_list
                                     ;
+                // MAP
                 index_list              : index index_list
                                         | index
                                         ;
+                // MAP
                 index                   : LB expression RB
                                         ;
             // scalar_variable         : ID 2/21/2025
             //                         ;
-        assignment_operator     : ASS       
+        assignment_operator     : ASS
                                 // the only operator, that can be changed from assignment to declaration
                                 | ADD_ASS
                                 | SUB_ASS

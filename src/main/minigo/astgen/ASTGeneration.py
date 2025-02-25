@@ -176,20 +176,25 @@ class ASTGeneration(MiniGoVisitor):
     #==============================
     '''
     def visitLhs(self, ctx:MiniGoParser.LhsContext):
-        return self.visitChildren(ctx)
+        if ctx.field_access():
+            return self.visit(ctx.field_access())
+        elif ctx.array_index():
+            return self.visit(ctx.array_index())
+        elif ctx.ID():
+            return Id(name=ctx.ID().getText())
     
 
     def visitField_access(self, ctx:MiniGoParser.Field_accessContext):
-        return self.visitChildren(ctx)
+        return FieldAccess(receiver=self.visit(ctx.expression()), field=ctx.ID().getText())
     
 
     def visitArray_index(self, ctx:MiniGoParser.Array_indexContext):
-        return self.visitChildren(ctx)
+        return ArrayCell(arr=self.visit(ctx.expression()), idx=self.visit(ctx.index_list()))
     
 
     def visitIndex_list(self, ctx:MiniGoParser.Index_listContext):
-        return self.visitChildren(ctx)
+        return [self.visit(ctx.index())] if ctx.getChildCount() == 1 else [self.visit(ctx.index())] + self.visit(ctx.index_list())
     
 
     def visitIndex(self, ctx:MiniGoParser.IndexContext):
-        return self.visitChildren(ctx)
+        return self.visit(ctx.expression())
