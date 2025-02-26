@@ -386,78 +386,81 @@ declaration         : constant_declaration  // global things            O
                     // property_name               : ID 2/21/2025 -> replace property_name
                     //                             ;
         // CHECK - should rename for AST alignment
-        interface_declaration   : TYPE ID INTERFACE LCB method_declaration_list RCB SEMICOLON
+        // 2/26/2025 fixing the name for AST alignment
+        interface_declaration   : TYPE ID INTERFACE LCB prototype_list RCB SEMICOLON
                                 ;
             // interface_name          : ID 2/21/2025 -> replace interface_name
             //                         ;
             // non-empty list of method declaration
-            method_declaration_list : method_declaration method_declaration_list
-                                    | method_declaration
+            prototype_list          : prototype prototype_list
+                                    | prototype
                                     ;
-                method_declaration      : ID LP parameter_list RP type_part SEMICOLON
-                                        | ID LP parameter_list RP           SEMICOLON
+                prototype               : ID LP field_list RP type_part SEMICOLON
+                                        | ID LP field_list RP           SEMICOLON
                                         ;
 
     // not the same as C/C++ when the declaration can be separated from function definition
-    function_declaration: function_definition
+    // 2/26/2025 fixing the intermediate rule
+    // making the function_declaration more correct and align with teacher's AST
+    // and prototype in interface declaration
+    function_declaration: func_declaration
+                        | method_declaration
                         ;
-        function_definition : normal_function_definition
-                            | method_definition
-                            ;
-            // just add 
-            normal_function_definition  : function_header function_body SEMICOLON
-                                        ;
-                function_header             : FUNC ID LP parameter_list RP type_part
-                                            | FUNC ID LP parameter_list RP
-                                            ;
+        func_declaration            : FUNC ID LP field_list RP type_part block SEMICOLON
+                                    | FUNC ID LP field_list RP           block SEMICOLON
+                                    ;
                     // function_name               : ID 2/21/2025 replace function_name
                     //                             ;
-                    parameter_list              : parameter_prime
-                                                | 
+            // 2/26/2025 -> fixing parameter_list to align with real Go
+            // field list
+            // parameter_list              : parameter_prime
+            //                             | 
+            //                             ;
+            // 2/26/2025 -> replace parameter_list with field_list -> more like Go
+            field_list                  : field_prime
+                                        |
+                                        ;
+                field_prime             : field COMMA field_prime
+                                        | field
+                                        ;
+                    field                   : name_list type_part
+                                            ;
+                        // as like in Go's AST tree when each ast.Field contain
+                        //------Name : list of pointer ast.Ident
+                        //------Type : pointer ast.Ident
+                        name_list               : ID COMMA name_list
+                                                | ID
                                                 ;
-                        parameter_prime             : parameter COMMA parameter_prime
-                                                    | parameter
-                                                    ;
+                parameter_prime             : parameter COMMA parameter_prime
+                                            | parameter
+                                            ;
                             // cause ambiguity, but solved based on ANTLR ordering rule
-                            parameter                   : name_type
-                                                        | same_type_list
-                                                        ;
-                                same_type_list          : name_list type_part
-                                                        ;
-                                    name_list               : ID COMMA name_list
-                                                            | ID
-                                                            ;
+                    parameter                   : name_type
+                                                | same_type_list
+                                                ;
+                        same_type_list          : name_list type_part
+                                                ;
+                            // name_list               : ID COMMA name_list
+                            //                         | ID 2/26/2025 -> comment this redundant rule
+                            //                         ;
                                         // name                    : ID 2/21/2025 replace name ->
                                         //                         ;
-                                name_type                   : ID type_part
-                                                                ;
-                // CHECK
-                function_body                   : block
-                                                ;
-                    // No need to add semi??? NOTE
-                    block                           : LCB block_member_list RCB
+                    name_type                   : ID type_part
                                                     ;
-                        // list of nullable block_member, not separated by something
-                        // NOTE - fixing block not nullable
-                        block_member_list               : block_member block_member_list
-                                                        | block_member
-                                                        ;
-                            // NOTE: block inside block
-                            // fixing a block member can't be a just raw block {___} -> SEMI is added ->?
-                            // CHECK
-                            block_member                    : statement
-                                                            // | block
-                                                            ;
+            block                           : LCB block_member_list RCB
+                                            ;
+                block_member_list               : block_member block_member_list
+                                                | block_member
+                                                ;
+                    block_member                    : statement
+                                                    ;
             // NOTE: whether or not, there is a statement end???
             // CHECK
-            method_definition           : method_header function_body SEMICOLON
-                                        ;
-                method_header               : FUNC LP receiver RP ID LP parameter_list RP type_part
-                                            | FUNC LP receiver RP ID LP parameter_list RP
-                                            ;
-                    receiver                    : ID type_part
-                                                ; 
-
+            // 2/26/2025 fixing long rule -> short rule and more specific to be easier to create AST node
+            // and align with the AST teacher's structure
+        method_declaration          : FUNC LP ID type_part RP ID LP field_list RP type_part block SEMICOLON
+                                    | FUNC LP ID type_part RP ID LP field_list RP           block SEMICOLON
+                                    ;
 // it doesn't contain function_declaration, thus a block should have multiple statements
 // check-out list for AST generation
 statement           : variable_declaration  // O    O
@@ -481,6 +484,7 @@ statement           : variable_declaration  // O    O
                             ;
         // variable_name           : ID 2/21/2025 replace variable_name -> 
         //                         ;
+        // MAP
         type_part               : primitive_type     // representing type of variable
                                 | ID                 // can be type of Struct or Interface (user defined)
                                 | array_type
