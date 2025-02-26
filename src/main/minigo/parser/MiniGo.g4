@@ -385,6 +385,7 @@ declaration         : constant_declaration  // global things            O
                                             ;
                     // property_name               : ID 2/21/2025 -> replace property_name
                     //                             ;
+        // CHECK - should rename for AST alignment
         interface_declaration   : TYPE ID INTERFACE LCB method_declaration_list RCB SEMICOLON
                                 ;
             // interface_name          : ID 2/21/2025 -> replace interface_name
@@ -574,16 +575,8 @@ statement           : variable_declaration  // O    O
                                             // call                    : function_call 2/25/2025 -> removing unused parser rule
                                             //                         // | method_call - already represented by DOT operator
                                             //                         ;
-                                                function_call           : ID LP argument_list RP
-                                                                        ;
-                                                    argument_list           : argument_prime
-                                                                            | 
-                                                                            ;
-                                                        argument_prime          : argument COMMA argument_prime
-                                                                                | argument
-                                                                                ;
-                                                            argument                : expression
-                                                                                    ;
+                                                // function_call           : ID LP argument_list RP - 2/25/2025 remove function_call
+                                                //                         ; -> making it embedded into other rules for intuition
                                             literal                 : integer_literal
                                                                     | FLOATING_POINT
                                                                     | STRING_LITERAL
@@ -821,16 +814,30 @@ statement           : variable_declaration  // O    O
 
     // CHECK, must create the same FuncCall and MethCall
     // with expression -> need modify to be unified in AST
+    // MAP
     call_statement              : function_call_statement
                                 | method_call_statement
                                 ;
+        // MAP
         function_call_statement     : ID LP argument_list RP SEMICOLON
                                     // function_call SEMICOLON - 2/25/2025 deleting intermediate rule
                                     ;
+            // MAP
+            argument_list           : argument_prime
+                                    | 
+                                    ;
+                // MAP
+                argument_prime          : argument COMMA argument_prime
+                                        | argument
+                                        ;
+                    // MAP
+                    argument                : expression
+                                            ;
         // problematic
         // NOTE
         // grammartically prevent weird expression
         // but unified CallExpr
+        // MAP
         method_call_statement       : expression DOT ID LP argument_list RP SEMICOLON
                                     // expression DOT function_call SEMICOLON - 2/25/2025 deleting intermediate rule
                                     ;

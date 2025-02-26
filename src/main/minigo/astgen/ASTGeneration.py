@@ -227,11 +227,23 @@ class ASTGeneration(MiniGoVisitor):
     #==============================
     '''
     def visitCall_statement(self, ctx:MiniGoParser.Call_statementContext):
-        return self.visitChildren(ctx)
+        return self.visit(ctx.function_call_statement()) if ctx.function_call_statement() else self.visit(ctx.method_call_statement())
     
 
     def visitFunction_call_statement(self, ctx:MiniGoParser.Function_call_statementContext):
-        return self.visitChildren(ctx)
+        return FuncCall(funName=ctx.ID().getText(), args=self.visit(ctx.argument_list()))
+    
+
+    def visitArgument_list(self, ctx:MiniGoParser.Argument_listContext):
+        return self.visit(ctx.argument_prime()) if ctx.argument_prime() else []
+    
+
+    def visitArgument_prime(self, ctx:MiniGoParser.Argument_primeContext):
+        return [self.visit(ctx.argument())] if ctx.getChildCount() == 1 else [self.visit(ctx.argument())] + self.visit(ctx.argument_prime())
+    
+
+    def visitArgument(self, ctx:MiniGoParser.ArgumentContext):
+        return self.visit(ctx.expression())
 
 
     '''
@@ -243,4 +255,46 @@ class ASTGeneration(MiniGoVisitor):
     #==============================
     '''
     def visitMethod_call_statement(self, ctx:MiniGoParser.Method_call_statementContext):
+        return MethCall(receiver=self.visit(ctx.expression()), metName=ctx.ID().getText(), args=self.visit(ctx.argument_list()))
+
+
+    '''
+    #==============================
+    AST: AST.StructType
+    - name : str
+    - elements : List[Tuple[str, Type]]
+    - methods : List[MethodDecl]
+    #==============================
+    '''
+    def visitType_declaration(self, ctx:MiniGoParser.Type_declarationContext):
         return self.visitChildren(ctx)
+
+
+    def visitStruct_declaration(self, ctx:MiniGoParser.Struct_declarationContext):
+        return StructType(name=ctx.ID().getText(), elements=self.visit(ctx.property_declaration_list()), methods=None)
+
+
+    def visitProperty_declaration_list(self, ctx:MiniGoParser.Property_declaration_listContext):
+        return [self.visit(ctx.property_declaration())] if ctx.getChildCount() == 1 else [self.visit(ctx.property_declaration())] + self.visit(ctx.property_declaration_list())
+
+
+    def visitProperty_declaration(self, ctx:MiniGoParser.Property_declarationContext):
+        return (ctx.ID().getText(), self.visit(ctx.type_part()))
+
+
+    def visitType_part(self, ctx:MiniGoParser.Type_partContext):
+        if ctx.primitive_type():
+            return self.visit(ctx.primitive_type())
+        elif ctx.ID():
+            return Id(name=ctx.ID().getText())
+        elif ctx.array_type():
+            return self.visit(ctx.array_type())
+
+
+    '''
+    #==============================
+    AST: AST.InterfaceType
+    - name : str
+    - methods : List[Prototype]
+    #==============================
+    '''
