@@ -267,7 +267,7 @@ class ASTGeneration(MiniGoVisitor):
     #==============================
     '''
     def visitType_declaration(self, ctx:MiniGoParser.Type_declarationContext):
-        return self.visitChildren(ctx)
+        return self.visit(ctx.struct_declaration()) if ctx.struct_declaration() else self.visit(ctx.interface_declaration())
 
 
     def visitStruct_declaration(self, ctx:MiniGoParser.Struct_declarationContext):
@@ -298,6 +298,28 @@ class ASTGeneration(MiniGoVisitor):
     - methods : List[Prototype]
     #==============================
     '''
+    def visitInterface_declaration(self, ctx:MiniGoParser.Interface_declarationContext):
+        return InterfaceType(name=ctx.ID().getText(), methods=self.visit(ctx.prototype_list()))
+
+
+    def visitPrototype_list(self, ctx:MiniGoParser.Prototype_listContext):
+        return [self.visit(ctx.prototype())] if ctx.getChildCount() == 1 else [self.visit(ctx.prototype())] + self.visit(ctx.prototype_list())
+
+
+    '''
+    #==============================
+    AST: AST.Prototype
+    - name : str
+    - params : List[Type]
+    - retType : Type
+    #==============================
+    '''
+    def visitPrototype(self, ctx:MiniGoParser.PrototypeContext):
+        return Prototype(name=ctx.ID().getText(), params=[param_decl.parType for param_decl in self.visit(ctx.field_list())], retType=self.visit(ctx.type_part())) if ctx.type_part() else Prototype(name=ctx.ID().getText(), params=[param_decl.parType for param_decl in self.visit(ctx.field_list())], retType=VoidType())
+
+
+    def visitFunction_declaration(self, ctx:MiniGoParser.Function_declarationContext):
+        return self.visit(ctx.func_declaration()) if ctx.func_declaration() else self.visit(ctx.method_declaration())
 
 
     '''
@@ -309,14 +331,17 @@ class ASTGeneration(MiniGoVisitor):
     - block : Block
     #==============================
     '''
-    def visitFunction_declaration(self, ctx:MiniGoParser.Function_declarationContext):
-        return self.visitChildren(ctx)
-
-
     def visitFunc_declaration(self, ctx:MiniGoParser.Func_declarationContext):
         return FuncDecl(name=ctx.ID().getText(), params=self.visit(ctx.field_list()), retType=self.visit(ctx.type_part()), body=self.visit(ctx.block())) if ctx.type_part() else FuncDecl(name=ctx.ID().getText(), params=self.visit(ctx.field_list()), retType=VoidType(), body=self.visit(ctx.block()))
 
 
+    '''
+    #==============================
+    AST: AST.ParamDecl
+    - parName : str
+    - parType : Type
+    #==============================
+    '''
     def visitField_list(self, ctx:MiniGoParser.Field_listContext):
         return self.visit(ctx.field_prime()) if ctx.field_prime() else []
 
@@ -335,18 +360,11 @@ class ASTGeneration(MiniGoVisitor):
 
     '''
     #==============================
-    AST: AST.ParamDecl
-    - parName : str
-    - parType : Type
-    #==============================
-    '''
-
-
-    '''
-    #==============================
     AST: AST.MethodDecl
     - receiver : str
     - recType : Type
     - fun : FuncDecl
     #==============================
     '''
+    def visitMethod_declaration(self, ctx:MiniGoParser.Method_declarationContext):
+        return MethodDecl(receiver=ctx.ID(0).getText(), recType=self.visit(ctx.type_part(0)), fun=FuncDecl(name=ctx.ID(1).getText(), params=self.visit(ctx.field_list()), retType=self.visit(ctx.type_part(1)), body=self.visit(ctx.block()))) if ctx.type_part(1) else MethodDecl(receiver=ctx.ID(0).getText(), recType=self.visit(ctx.type_part(0)), fun=FuncDecl(name=ctx.ID(1).getText(), params=self.visit(ctx.field_list()), retType=VoidType(), body=self.visit(ctx.block())))

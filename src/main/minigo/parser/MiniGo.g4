@@ -370,31 +370,38 @@ declaration         : constant_declaration  // global things            O
                     | type_declaration      // struct or interface      O
                     | function_declaration  // a function               O
                     ;
+    // MAP
     type_declaration    : struct_declaration
                         | interface_declaration
                         ;
+        // MAP
         struct_declaration  : TYPE ID STRUCT LCB property_declaration_list RCB SEMICOLON
                             ;
             // struct_name             : ID 2/21/2025 -> replace struct_name
             //                         ;
             // a non-empty list
+            // MAP
             property_declaration_list   : property_declaration property_declaration_list
                                         | property_declaration
                                         ;
+                // MAP
                 property_declaration        : ID type_part SEMICOLON
                                             ;
                     // property_name               : ID 2/21/2025 -> replace property_name
                     //                             ;
         // CHECK - should rename for AST alignment
         // 2/26/2025 fixing the name for AST alignment
+        // MAP
         interface_declaration   : TYPE ID INTERFACE LCB prototype_list RCB SEMICOLON
                                 ;
             // interface_name          : ID 2/21/2025 -> replace interface_name
             //                         ;
             // non-empty list of method declaration
+            // MAP
             prototype_list          : prototype prototype_list
                                     | prototype
                                     ;
+                // MAP
                 prototype               : ID LP field_list RP type_part SEMICOLON
                                         | ID LP field_list RP           SEMICOLON
                                         ;
