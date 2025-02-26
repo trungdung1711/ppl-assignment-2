@@ -298,3 +298,55 @@ class ASTGeneration(MiniGoVisitor):
     - methods : List[Prototype]
     #==============================
     '''
+
+
+    '''
+    #==============================
+    AST: AST.FuncDecl
+    - name : str
+    - params : List[ParamDecl]
+    - retType : Type
+    - block : Block
+    #==============================
+    '''
+    def visitFunction_declaration(self, ctx:MiniGoParser.Function_declarationContext):
+        return self.visitChildren(ctx)
+
+
+    def visitFunc_declaration(self, ctx:MiniGoParser.Func_declarationContext):
+        return FuncDecl(name=ctx.ID().getText(), params=self.visit(ctx.field_list()), retType=self.visit(ctx.type_part()), body=self.visit(ctx.block())) if ctx.type_part() else FuncDecl(name=ctx.ID().getText(), params=self.visit(ctx.field_list()), retType=VoidType(), body=self.visit(ctx.block()))
+
+
+    def visitField_list(self, ctx:MiniGoParser.Field_listContext):
+        return self.visit(ctx.field_prime()) if ctx.field_prime() else []
+
+
+    def visitField_prime(self, ctx:MiniGoParser.Field_primeContext):
+        return self.visit(ctx.field()) if ctx.getChildCount() == 1 else self.visit(ctx.field()) + self.visit(ctx.field_prime())
+
+
+    def visitField(self, ctx:MiniGoParser.FieldContext):
+        return [ParamDecl(parName=parName, parType=self.visit(ctx.type_part())) for parName in self.visit(ctx.name_list())]
+
+
+    def visitName_list(self, ctx:MiniGoParser.Name_listContext):
+        return [ctx.ID().getText()] if ctx.getChildCount() == 1 else [ctx.ID().getText()] + self.visit(ctx.name_list())
+
+
+    '''
+    #==============================
+    AST: AST.ParamDecl
+    - parName : str
+    - parType : Type
+    #==============================
+    '''
+
+
+    '''
+    #==============================
+    AST: AST.MethodDecl
+    - receiver : str
+    - recType : Type
+    - fun : FuncDecl
+    #==============================
+    '''

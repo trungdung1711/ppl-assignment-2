@@ -403,9 +403,11 @@ declaration         : constant_declaration  // global things            O
     // 2/26/2025 fixing the intermediate rule
     // making the function_declaration more correct and align with teacher's AST
     // and prototype in interface declaration
+    // MAP
     function_declaration: func_declaration
                         | method_declaration
                         ;
+        // MAP
         func_declaration            : FUNC ID LP field_list RP type_part block SEMICOLON
                                     | FUNC ID LP field_list RP           block SEMICOLON
                                     ;
@@ -417,36 +419,43 @@ declaration         : constant_declaration  // global things            O
             //                             | 
             //                             ;
             // 2/26/2025 -> replace parameter_list with field_list -> more like Go
+            // MAP
             field_list                  : field_prime
                                         |
                                         ;
+                // MAP
                 field_prime             : field COMMA field_prime
                                         | field
                                         ;
+                    // name_list can contain one or a list of ID
+                    // return [] -> then return list of ID + same type -> list of ParamDecl -> a field -> field_list
+                    // MAP
                     field                   : name_list type_part
                                             ;
                         // as like in Go's AST tree when each ast.Field contain
                         //------Name : list of pointer ast.Ident
                         //------Type : pointer ast.Ident
+                        // MAP
                         name_list               : ID COMMA name_list
                                                 | ID
                                                 ;
-                parameter_prime             : parameter COMMA parameter_prime
-                                            | parameter
-                                            ;
+                // 2/26/2025 -> commenting out redundant rules
+                // parameter_prime             : parameter COMMA parameter_prime
+                //                             | parameter
+                //                             ;
                             // cause ambiguity, but solved based on ANTLR ordering rule
-                    parameter                   : name_type
-                                                | same_type_list
-                                                ;
-                        same_type_list          : name_list type_part
-                                                ;
+                    // parameter                   : name_type
+                    //                             | same_type_list
+                    //                             ;
+                        // same_type_list          : name_list type_part
+                        //                         ;
                             // name_list               : ID COMMA name_list
                             //                         | ID 2/26/2025 -> comment this redundant rule
                             //                         ;
                                         // name                    : ID 2/21/2025 replace name ->
                                         //                         ;
-                    name_type                   : ID type_part
-                                                    ;
+                    // name_type                   : ID type_part
+                    //                                 ;
             block                           : LCB block_member_list RCB
                                             ;
                 block_member_list               : block_member block_member_list
@@ -458,6 +467,7 @@ declaration         : constant_declaration  // global things            O
             // CHECK
             // 2/26/2025 fixing long rule -> short rule and more specific to be easier to create AST node
             // and align with the AST teacher's structure
+        // MAP
         method_declaration          : FUNC LP ID type_part RP ID LP field_list RP type_part block SEMICOLON
                                     | FUNC LP ID type_part RP ID LP field_list RP           block SEMICOLON
                                     ;
