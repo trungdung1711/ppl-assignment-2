@@ -701,13 +701,13 @@ statement           : variable_declaration  // O    O
                             | lhs MOD_ASS expression SEMICOLON
                             ;
         assignment_operator     : ASS
-                        // the only operator, that can be changed from assignment to declaration
-                        | ADD_ASS
-                        | SUB_ASS
-                        | MUL_ASS
-                        | DIV_ASS
-                        | MOD_ASS
-                        ;
+                                // the only operator, that can be changed from assignment to declaration
+                                | ADD_ASS
+                                | SUB_ASS
+                                | MUL_ASS
+                                | DIV_ASS
+                                | MOD_ASS
+                                ;
         // note, we must allow them to be chained together
         // allow expression in []
         // the left hand side is separately defined from the expression
@@ -758,18 +758,21 @@ statement           : variable_declaration  // O    O
     // CHECK - 2/25/2025 - modify if_statement for AST structure, solving the
     // SEMI at the end of the if_statement
     // MAP
-    if_statement            : IF LP expression RP block else_part SEMICOLON
-                            | IF LP expression RP block           SEMICOLON
+    // 2/27/2025 fixing the name of the statement for correct naming, and align with AST
+    if_statement            : if_part SEMICOLON
+                            // | if_part           SEMICOLON
+    //                         | IF LP expression RP block           SEMICOLON
                             // | IF LP expression RP block             SEMICOLON
                             // | IF LP expression RP block   SEMICOLON
+
                             ;
         // same as if_statement but doesn't have SEMI at the end -> allow recursive in else part
         // MAP
-        if_statement_recursive  : IF LP expression RP block else_part
+        if_part                 : IF LP expression RP block else_part
                                 | IF LP expression RP block
                                 ;
         // MAP
-        else_part               : ELSE if_statement_recursive
+        else_part               : ELSE if_part
                                 | ELSE block
                                 ;
         // boolean_expression      : expression 2/21/2025

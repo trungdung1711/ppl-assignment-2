@@ -209,14 +209,15 @@ class ASTGeneration(MiniGoVisitor):
     #==============================
     '''
     def visitIf_statement(self, ctx:MiniGoParser.If_statementContext):
-        return If(expr=self.visit(ctx.expression()), thenStmt=self.visit(ctx.block()), elseStmt=self.visit(ctx.else_part())) if ctx.else_part() else If(expr=self.visit(ctx.expression()), thenStmt=self.visit(ctx.block()), elseStmt=None)
-    
+        return self.visit(ctx.if_part())
 
-    def visitIf_statement_recursive(self, ctx:MiniGoParser.If_statement_recursiveContext):
+
+    def visitIf_part(self, ctx:MiniGoParser.If_partContext):
         return If(expr=self.visit(ctx.expression()), thenStmt=self.visit(ctx.block()), elseStmt=self.visit(ctx.else_part())) if ctx.else_part() else If(expr=self.visit(ctx.expression()), thenStmt=self.visit(ctx.block()), elseStmt=None)
+
 
     def visitElse_part(self, ctx:MiniGoParser.Else_partContext):
-        return self.visit(ctx.if_statement_recursive()) if ctx.if_statement_recursive() else self.visit(ctx.block())
+        return self.visit(ctx.if_part()) if ctx.if_part() else self.visit(ctx.block())
     
 
     '''
