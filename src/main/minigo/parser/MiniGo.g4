@@ -364,96 +364,120 @@ program             : declaration_list EOF
                         ;
 
 // should not be inside a block
+// CHECK - type_declaration -> Type
 declaration         : constant_declaration  // global things            O
                     | variable_declaration  // global things            O
                     | type_declaration      // struct or interface      O
                     | function_declaration  // a function               O
                     ;
+    // MAP
     type_declaration    : struct_declaration
                         | interface_declaration
                         ;
-        struct_declaration  : TYPE struct_name STRUCT LCB property_declaration_list RCB statement_end
+        // MAP
+        struct_declaration  : TYPE ID STRUCT LCB property_declaration_list RCB SEMICOLON
                             ;
-            struct_name             : ID
-                                    ;
+            // struct_name             : ID 2/21/2025 -> replace struct_name
+            //                         ;
             // a non-empty list
+            // MAP
             property_declaration_list   : property_declaration property_declaration_list
                                         | property_declaration
                                         ;
-                property_declaration        : property_name type_part statement_end
+                // MAP
+                property_declaration        : ID type_part SEMICOLON
                                             ;
-                    property_name               : ID
-                                                ;
-        interface_declaration   : TYPE interface_name INTERFACE LCB method_declaration_list RCB statement_end
+                    // property_name               : ID 2/21/2025 -> replace property_name
+                    //                             ;
+        // CHECK - should rename for AST alignment
+        // 2/26/2025 fixing the name for AST alignment
+        // MAP
+        interface_declaration   : TYPE ID INTERFACE LCB prototype_list RCB SEMICOLON
                                 ;
-            interface_name          : ID
-                                    ;
+            // interface_name          : ID 2/21/2025 -> replace interface_name
+            //                         ;
             // non-empty list of method declaration
-            method_declaration_list : method_declaration method_declaration_list
-                                    | method_declaration
+            // MAP
+            prototype_list          : prototype prototype_list
+                                    | prototype
                                     ;
-                method_declaration      : function_name LP parameter_list RP type_part statement_end
-                                        | function_name LP parameter_list RP           statement_end
+                // MAP
+                prototype               : ID LP field_list RP type_part SEMICOLON
+                                        | ID LP field_list RP           SEMICOLON
                                         ;
 
     // not the same as C/C++ when the declaration can be separated from function definition
-    function_declaration: function_definition
+    // 2/26/2025 fixing the intermediate rule
+    // making the function_declaration more correct and align with teacher's AST
+    // and prototype in interface declaration
+    // MAP
+    function_declaration: func_declaration
+                        | method_declaration
                         ;
-        function_definition : normal_function_definition
-                            | method_definition
-                            ;
-            // just add statement_end
-            normal_function_definition  : function_header function_body statement_end
+        // MAP
+        func_declaration            : FUNC ID LP field_list RP type_part block SEMICOLON
+                                    | FUNC ID LP field_list RP           block SEMICOLON
+                                    ;
+                    // function_name               : ID 2/21/2025 replace function_name
+                    //                             ;
+            // 2/26/2025 -> fixing parameter_list to align with real Go
+            // field list
+            // parameter_list              : parameter_prime
+            //                             | 
+            //                             ;
+            // 2/26/2025 -> replace parameter_list with field_list -> more like Go
+            // MAP
+            field_list                  : field_prime
+                                        |
                                         ;
-                function_header             : FUNC function_name LP parameter_list RP type_part
-                                            | FUNC function_name LP parameter_list RP
+                // MAP
+                field_prime             : field COMMA field_prime
+                                        | field
+                                        ;
+                    // name_list can contain one or a list of ID
+                    // return [] -> then return list of ID + same type -> list of ParamDecl -> a field -> field_list
+                    // MAP
+                    field                   : name_list type_part
                                             ;
-                    function_name               : ID
+                        // as like in Go's AST tree when each ast.Field contain
+                        //------Name : list of pointer ast.Ident
+                        //------Type : pointer ast.Ident
+                        // MAP
+                        name_list               : ID COMMA name_list
+                                                | ID
                                                 ;
-                    parameter_list              : parameter_prime
-                                                | 
-                                                ;
-                        parameter_prime             : parameter COMMA parameter_prime
-                                                    | parameter
-                                                    ;
+                // 2/26/2025 -> commenting out redundant rules
+                // parameter_prime             : parameter COMMA parameter_prime
+                //                             | parameter
+                //                             ;
                             // cause ambiguity, but solved based on ANTLR ordering rule
-                            parameter                   : name_type
-                                                        | same_type_list
-                                                        ;
-                                same_type_list          : name_list type_part
-                                                        ;
-                                    name_list               : name COMMA name_list
-                                                            | name
-                                                            ;
-                                        name                    : ID
-                                                                ;
-                                name_type                   : name type_part
-                                                                ;
-                function_body                   : block
+                    // parameter                   : name_type
+                    //                             | same_type_list
+                    //                             ;
+                        // same_type_list          : name_list type_part
+                        //                         ;
+                            // name_list               : ID COMMA name_list
+                            //                         | ID 2/26/2025 -> comment this redundant rule
+                            //                         ;
+                                        // name                    : ID 2/21/2025 replace name ->
+                                        //                         ;
+                    // name_type                   : ID type_part
+                    //                                 ;
+            block                           : LCB block_member_list RCB
+                                            ;
+                block_member_list               : block_member block_member_list
+                                                | block_member
                                                 ;
-                    // No need to add semi??? NOTE
-                    block                           : LCB block_member_list RCB
+                    block_member                    : statement
                                                     ;
-                        // list of nullable block_member, not separated by something
-                        // NOTE - fixing block not nullable
-                        block_member_list               : block_member block_member_list
-                                                        | block_member
-                                                        ;
-                            // NOTE: block inside block
-                            // fixing a block member can't be a just raw block {___} -> SEMI is added ->?
-                            block_member                    : statement
-                                                            // | block
-                                                            ;
             // NOTE: whether or not, there is a statement end???
             // CHECK
-            method_definition           : method_header function_body statement_end
-                                        ;
-                method_header               : FUNC LP receiver RP function_name LP parameter_list RP type_part
-                                            | FUNC LP receiver RP function_name LP parameter_list RP
-                                            ;
-                    receiver                    : name type_part
-                                                ; 
-
+            // 2/26/2025 fixing long rule -> short rule and more specific to be easier to create AST node
+            // and align with the AST teacher's structure
+        // MAP
+        method_declaration          : FUNC LP ID type_part RP ID LP field_list RP type_part block SEMICOLON
+                                    | FUNC LP ID type_part RP ID LP field_list RP           block SEMICOLON
+                                    ;
 // it doesn't contain function_declaration, thus a block should have multiple statements
 // check-out list for AST generation
 statement           : variable_declaration  // O    O
@@ -466,50 +490,57 @@ statement           : variable_declaration  // O    O
                     | call_statement        // O    O
                     | return_statement      // O    O
                     ;
-    // variable_declaration    : VAR variable_name type? initialisation? statement_end;
+    // variable_declaration    : VAR variable_name type? initialisation? ;
     // NOTES
     // fixing
     // Comment out the fourth rule, as there must be at least type or initialisation
-    variable_declaration    : VAR variable_name type_part initialisation statement_end
-                            | VAR variable_name type_part                statement_end
-                            | VAR variable_name           initialisation statement_end
-                            // | VAR variable_name                          statement_end
+    variable_declaration    : VAR ID type_part EQUAL expression SEMICOLON
+                            | VAR ID type_part                  SEMICOLON
+                            | VAR ID           EQUAL expression SEMICOLON
+                            // | VAR ID                          
                             ;
-        variable_name           : ID
-                                ;
+        // variable_name           : ID 2/21/2025 replace variable_name -> 
+        //                         ;
+        // MAP
         type_part               : primitive_type     // representing type of variable
-                                | composite_type     // can be type of Struct or Interface (user defined)
+                                | ID                 // can be type of Struct or Interface (user defined)
                                 | array_type
                                 ;
+            // MAP
             primitive_type          : INT
                                     | FLOAT
                                     | BOOLEAN
                                     | STRING
                                     ;
             // parser would allow wrong type, but not the case of semantic analysis
-            composite_type          : ID
-                                    ;
+            // composite_type          : ID 2/25/2025 replace composite_type
+            //                         ;
             // array_type              : dimension_list (primitive_type | composit_type);
             // should be the expression while the semantic analysis would reject the incorrect one
             // based on the MiniGo specification:
             // - only allow integer_literal and constant only
             // - different from array indexing in expression actually
+            // MAP
+            // should be recursively defined, as like Go
+            // CHECK
             array_type              : dimension_list primitive_type 
-                                    | dimension_list composite_type
+                                    | dimension_list ID
                                     ;
+                // MAP
                 dimension_list          : dimension dimension_list 
                                         | dimension
                                         ;
+                    // MAP
                     dimension               : LB integer_literal RB
-                                            | LB constant        RB
+                                            | LB ID              RB
                                             ;
                         // the parser cannot determine 
                         // whether an identifier actually refers to a constant
-                        constant                : ID 
-                                                ;
+                        // constant                : ID 2/21/2025 replace constant
+                        //                         ;
         // value must be computable at compile time
-        initialisation          : EQUAL expression
-                                ;
+        // initialisation          : EQUAL expression 2/21/2025
+        //                         ;
             expression              : expression OR ex1
                                     | ex1
                                     ;
@@ -549,29 +580,24 @@ statement           : variable_declaration  // O    O
                                     // get the element of the struct type
                                     // call the method of the struct type
                                     // CHECK -> create MethCall
-                                    ex6                     : ex6 LB expression RB
-                                                            | ex6 DOT function_call     // with the receiver before the DOT operator
-                                                            | ex6 DOT field_name
-                                                            | ex7
+                                    // 2/25/2025 modify the array access expression to
+                                    // follow the AST's structure
+                                    ex6                     : ex6 index_list                     // array access
+                                                            | ex6 DOT ID LP argument_list RP     // with the receiver before the DOT operator
+                                                            | ex6 DOT ID                         // 2/25/2025 - deleting intermediate function_call rule
+                                                            | ex7                                // at this point -> create MethCall()
                                                             ;
                                         ex7                     : literal
-                                                                | variable_name         // can be merged and let semantic analysis to handle??
-                                                                | call
-                                                                | LP expression RP      // result from other operator
-                                                                ;
-                                            call                    : function_call
-                                                                    // | method_call - already represented by DOT operator
-                                                                    ;
-                                                function_call           : function_name LP argument_list RP
-                                                                        ;
-                                                    argument_list           : argument_prime
-                                                                            | 
-                                                                            ;
-                                                        argument_prime          : argument COMMA argument_prime
-                                                                                | argument
-                                                                                ;
-                                                            argument                : expression
-                                                                                    ;
+                                                                | ID                        // can be merged and let semantic analysis to handle??
+                                                                | ID LP argument_list RP    // 2/25/2025 - deleting intermediate parser rule
+                                                                | LP expression RP          // result from other operator
+                                                                ;                           // at this point -> create FuncCall
+                                            // CHECK
+                                            // call                    : function_call 2/25/2025 -> removing unused parser rule
+                                            //                         // | method_call - already represented by DOT operator
+                                            //                         ;
+                                                // function_call           : ID LP argument_list RP - 2/25/2025 remove function_call
+                                                //                         ; -> making it embedded into other rules for intuition
                                             literal                 : integer_literal
                                                                     | FLOATING_POINT
                                                                     | STRING_LITERAL
@@ -580,11 +606,13 @@ statement           : variable_declaration  // O    O
                                                                     | array_literal
                                                                     | struct_literal
                                                                     ;
+                                                // MAP
                                                 integer_literal         : DECIMAL_INTEGER
                                                                         | BINARY_INTEGER
                                                                         | OCTAL_INTEGER
                                                                         | HEXA_INTEGER
                                                                         ;
+                                                // MAP
                                                 boolean_literal         : TRUE
                                                                         | FALSE;
                                                 // must always have the [array_type] part
@@ -593,42 +621,53 @@ statement           : variable_declaration  // O    O
                                                 // not the expression but in the type of LCB
                                                 // NOTE: the value inside must be fixed
                                                 // fixing-array_literal can't be nullable
+                                                // MAP
                                                 array_literal           : array_type LCB array_element_list RCB
                                                                         ;
+                                                    // MAP
                                                     array_element_list      : array_element COMMA array_element_list
                                                                             | array_element
                                                                             ;
                                                             // allowing type deduction
                                                             // Take one part of the array_literal
                                                             // array_literal           : [array_type] (LCB element_array_list RCB)
-                                                            // NOTE: must be corrected
-                                                        array_element           : special_literal                 // which can allow typed array literal
-                                                                                | constant
+                                                            // CHECK!
+                                                            // 25/2/2025 change the name for this special literal
+                                                        // MAP
+                                                        array_element           : array_element_literal           // which can allow typed array literal
+                                                                                // | ID                           // Just contain PrimLit (only), not ID
                                                                                 | LCB array_element_list RCB      // can be seen as another array_literal
                                                                                 ;
+                                                                                // 2/25/2025 removing the ID part, as alligned with the AST teacher's structure, NO ID
                                                             // there is no array literal
-                                                            special_literal         : integer_literal
+                                                            // MAP
+                                                            array_element_literal   : integer_literal
                                                                                     | FLOATING_POINT
                                                                                     | STRING_LITERAL
                                                                                     | boolean_literal
                                                                                     | NIL
                                                                                     | struct_literal
                                                                                     ;
-                                                struct_literal          : struct_name LCB struct_element_list RCB
+                                                // MAP
+                                                struct_literal          : ID LCB struct_element_list RCB
                                                                         ;
+                                                    // MAP
                                                     struct_element_list     : struct_element_prime
                                                                             |
                                                                             ;
+                                                        // MAP
                                                         struct_element_prime    : struct_element COMMA struct_element_prime
                                                                                 | struct_element
                                                                                 ;
-                                                            struct_element          : field_name COLON expression
+                                                            // MAP
+                                                            struct_element          : ID COLON expression
                                                                                     ;
-                                                                field_name              : ID
-                                                                                        ;
-        statement_end       : SEMICOLON 
-                            // | NEWLINE
-                            ;
+                                                                // field_name              : ID 2/21/2025 replace field_name
+                                                                //                         ;
+        // // MAP - default behaviour
+        // statement_end       : SEMICOLON      - 2/21/2025 -> SEMICOLON
+        //                     // | NEWLINE
+        //                     ;
     // different between Go and C/C++
     // In Go, const means "absolutely immutable and evaluable at compile time."
     // Go doesn't allow 
@@ -639,21 +678,36 @@ statement           : variable_declaration  // O    O
     // but it does not have to be evaluable at compile time.
     // In C++, const int y = x + 10; is allowed, but x might change later, causing confusion.
     // note about constexpr
-    constant_declaration    : CONST const_name EQUAL value statement_end;
-        const_name              : ID;
+    // CHECK
+    constant_declaration    : CONST ID EQUAL expression SEMICOLON;
+        // const_name              : ID; 2/21/2025
         // should be a general expression (no need to separate them)
         // Go does not allow const for array, struct, slice, or map types.
         // Valid constant types: int, float, bool, string, complex.
-        value                   : expression
-                                // | literal_constant-redundant, as expression can be resolve to literal actually
-                                ;
+        // value                   : expression 2/21/2025
+        //                         // | literal_constant-redundant, as expression can be resolve to literal actually
+        //                         ;
             // literal_constant        : integer_literal
             //                         | FLOATING_POINT
             //                         | STRING_LITERAL
             //                         | boolean_literal
             //                         ;
-    assignment_statement    : lhs assignment_operator rhs statement_end
+    // MAP
+    // 2/27/2025 fixing the assignment statement to fit the AST's structure
+    assignment_statement    : lhs assignment_operator expression SEMICOLON
                             ;
+        // 2/27/2025 -> there is no reuse part of the
+        // assignment part -> no need for doing that
+        // assignment_part     : lhs assignment_operator expression
+        //                     ;
+        // MAP
+        assignment_operator     : ASS
+                                | ADD_ASS
+                                | SUB_ASS
+                                | MUL_ASS
+                                | DIV_ASS
+                                | MOD_ASS
+                                ;
         // note, we must allow them to be chained together
         // allow expression in []
         // the left hand side is separately defined from the expression
@@ -671,110 +725,167 @@ statement           : variable_declaration  // O    O
         //                         | lhs LB expression RB
         //                         | scalar_variable
         //                         ;
-        lhs                     : expression DOT field_name
-                                // CHECK list [ expression ]
-                                | expression LB expression RB
-                                | scalar_variable
+        // 2/25/2024 fixing the lhs rule for alignment with the AST
+        // more specific case of the lhs
+        // MAP
+        lhs                     : field_access
+                                | array_index
+                                | ID
                                 ;
-            scalar_variable         : ID
+            // MAP in expression, we would have to map again
+            field_access            : expression DOT ID
                                     ;
-        assignment_operator     : ASS       
-                                // the only operator, that can be changed from assignment to declaration
-                                | ADD_ASS
-                                | SUB_ASS
-                                | MUL_ASS
-                                | DIV_ASS
-                                | MOD_ASS
-                                ;
-        rhs                     : expression
-                                ;   // value must be compatible with the type of lhs
-    // How about the statement_end which enforces the ending of the statement ???
+            // MAP
+            array_index             : expression index_list
+                                    ;
+                // MAP
+                index_list              : index index_list
+                                        | index
+                                        ;
+                // MAP
+                index                   : LB expression RB
+                                        ;
+            // scalar_variable         : ID 2/21/2025
+            //                         ;
+        // rhs                     : expression 2/21/2025
+        //                         ;   // value must be compatible with the type of lhs
+    // How about the  which enforces the ending of the statement ???
     // must be check again for correct AST generation
     // may not explicitly represented in AST
-    // NOTE: adding statement_end???
+    // NOTE: adding ???
     // else if list
     // NOTE can be define as recursive rule
-    // CHECK
-    if_statement            : IF LP boolean_expression RP block                         statement_end
-                            | IF LP boolean_expression RP block              else_block statement_end
-                            | IF LP boolean_expression RP block else_if_list            statement_end
-                            | IF LP boolean_expression RP block else_if_list else_block statement_end
+    // CHECK - 2/25/2025 - modify if_statement for AST structure, solving the
+    // SEMI at the end of the if_statement
+    // MAP
+    // 2/27/2025 fixing the name of the statement for correct naming, and align with AST
+    if_statement            : if_part SEMICOLON
+                            // | if_part           SEMICOLON
+    //                         | IF LP expression RP block           SEMICOLON
+                            // | IF LP expression RP block             SEMICOLON
+                            // | IF LP expression RP block   SEMICOLON
+
                             ;
-        boolean_expression      : expression
+        // same as if_statement but doesn't have SEMI at the end -> allow recursive in else part
+        // MAP
+        if_part                 : IF LP expression RP block else_part
+                                | IF LP expression RP block
                                 ;
-        else_if_list            : else_if else_if_list | else_if 
+        // MAP
+        else_part               : ELSE if_part
+                                | ELSE block
                                 ;
-            else_if                 : ELSE IF LP boolean_expression RP block
-                                    ;
-        else_block                  : ELSE block
-                                ;
+        // boolean_expression      : expression 2/21/2025
+        //                         ;
+        // else_if_list            : else_if else_if_list | else_if 
+        //                         ;
+            // else_if                 : ELSE IF LP expression RP block 2/25/2025 moving to use if_statement_recursive
+            //                         ;                                         to align the AST structure
+        // else_block                  : ELSE block
+        //                             ;
     /*
         for statement: 
             - basic form
             - form with initialization
             - form for iterating over an array
      */
-    // NOTE: add statement_end
+    // NOTE: add 
+    // MAP
     for_statement           : basic_for_statement
                             | ini_for_statement
                             | range_for_statement
                             ;
         // change to condition for synchronisation
-        basic_for_statement     : FOR condition block statement_end
+        // MAP
+        basic_for_statement     : FOR expression block SEMICOLON
                                 ;
-        // if you want the statement_end to be nothing, then in the same line of [}
+        // if you want the  to be nothing, then in the same line of [}
         // you would continue to write the program -> no SEMI is inserted
         // if you enter -> SEMI, there must be grammar SEMI to catch this as a part 
         // of the grammar
-        ini_for_statement       : FOR ini SEMICOLON condition SEMICOLON update block statement_end
+        // 2/27/2025, fixing the for statement for AST's compatibility
+        // 2/2/27/2025, using for_assignment which is the AssignStmt specific in For
+        // MAP
+        ini_for_statement       : FOR ini SEMICOLON expression SEMICOLON for_assignment block SEMICOLON
                                 ;
             // there can be mistake at that point, but I choose to risk
             // NOTE: omit the declaration in for loop
-            ini                     : init_assignment
+            // MAP
+            ini                     : for_assignment
+                                    //init_assignment
                                     | init_declaration
                                     ;
-                init_assignment         : for_lhs assignment_operator rhs
+                // 2/27/2025 create a new rule used exclusively in ini_for_statement
+                // ease the creation of AST
+                // MAP
+                for_assignment          : ID assignment_operator expression
                                         ;
-                    for_lhs                 : scalar_variable
-                                            ;
-                init_declaration        : VAR variable_name type_part initialisation
-                                        | VAR variable_name           initialisation
+                    // for_lhs                 : ID 2/25/2025
+                    //                         ;
+                // NOTE
+                // 2/27/2025 may convert it into Assign with lhs ID and rhs Expr
+                // MAP
+                init_declaration        : VAR ID type_part EQUAL expression
+                                        | VAR ID           EQUAL expression
                                         ;
-            condition               : boolean_expression
-                                    ;
-            update                  : for_lhs assignment_operator rhs
-                                    ;
-        range_for_statement     : FOR index COMMA value_array ASS RANGE array block statement_end
+            // condition               : expression
+            //                         ;
+        // MAP
+        range_for_statement     : FOR ID COMMA ID ASS RANGE expression block SEMICOLON
                                 ;
-            index                   : ID
-                                    ;   // if it is an UNDERSCORE character -> may be handled in semantic analysis
-            value_array             : ID
-                                    ;
+            // index                   : ID 2/21/2025
+            //                         ;   // if it is an UNDERSCORE character -> may be handled in semantic analysis
+            // value_array             : ID 2/21/2025
+            //                         ;
             // should be defined as expression
             // element access
             // return from function
-            array                   : expression
-                                    ;
+            // array                   : expression 2/21/2025
+            //                         ;
                                 // inside the for_statement handled by semantic analysis (context stack)
-    break_statement             : BREAK statement_end
+    // MAP
+    break_statement             : BREAK SEMICOLON
                                 ;
-    continue_statement          : CONTINUE statement_end
+    // MAP
+    continue_statement          : CONTINUE SEMICOLON
                                 ;
     // Here, both foo().bar()[1].baz(); and myArray[2][3] use chaining, 
     // but they are not part of expressions. 
     // This means the parser must recognize them without relying on 
     // the normal expression grammar.
+
+    // CHECK, must create the same FuncCall and MethCall
+    // with expression -> need modify to be unified in AST
+    // MAP
     call_statement              : function_call_statement
                                 | method_call_statement
                                 ;
-        function_call_statement     : function_call statement_end
+        // MAP
+        function_call_statement     : ID LP argument_list RP SEMICOLON
+                                    // function_call SEMICOLON - 2/25/2025 deleting intermediate rule
                                     ;
+            // MAP
+            argument_list           : argument_prime
+                                    | 
+                                    ;
+                // MAP
+                argument_prime          : argument COMMA argument_prime
+                                        | argument
+                                        ;
+                    // MAP
+                    argument                : expression
+                                            ;
         // problematic
         // NOTE
-        method_call_statement       : expression DOT function_call statement_end
+        // grammartically prevent weird expression
+        // but unified CallExpr
+        // MAP
+        method_call_statement       : expression DOT ID LP argument_list RP SEMICOLON
+                                    // expression DOT function_call SEMICOLON - 2/25/2025 deleting intermediate rule
                                     ;
-    return_statement            : RETURN expression statement_end
-                                | RETURN            statement_end
+    // MAP
+    return_statement            : RETURN expression SEMICOLON
+                                | RETURN            SEMICOLON
                                 ;
 /*
     what semantic analysis (semantic checking) do, not the parser's job: 
