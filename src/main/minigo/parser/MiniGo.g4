@@ -692,8 +692,22 @@ statement           : variable_declaration  // O    O
             //                         | STRING_LITERAL
             //                         | boolean_literal
             //                         ;
-    assignment_statement    : lhs assignment_operator expression SEMICOLON
+    // MAP
+    assignment_statement    : lhs ASS     expression SEMICOLON
+                            | lhs ADD_ASS expression SEMICOLON
+                            | lhs SUB_ASS expression SEMICOLON
+                            | lhs MUL_ASS expression SEMICOLON
+                            | lhs DIV_ASS expression SEMICOLON
+                            | lhs MOD_ASS expression SEMICOLON
                             ;
+        assignment_operator     : ASS
+                        // the only operator, that can be changed from assignment to declaration
+                        | ADD_ASS
+                        | SUB_ASS
+                        | MUL_ASS
+                        | DIV_ASS
+                        | MOD_ASS
+                        ;
         // note, we must allow them to be chained together
         // allow expression in []
         // the left hand side is separately defined from the expression
@@ -733,14 +747,6 @@ statement           : variable_declaration  // O    O
                                         ;
             // scalar_variable         : ID 2/21/2025
             //                         ;
-        assignment_operator     : ASS
-                                // the only operator, that can be changed from assignment to declaration
-                                | ADD_ASS
-                                | SUB_ASS
-                                | MUL_ASS
-                                | DIV_ASS
-                                | MOD_ASS
-                                ;
         // rhs                     : expression 2/21/2025
         //                         ;   // value must be compatible with the type of lhs
     // How about the  which enforces the ending of the statement ???
@@ -792,17 +798,30 @@ statement           : variable_declaration  // O    O
         // you would continue to write the program -> no SEMI is inserted
         // if you enter -> SEMI, there must be grammar SEMI to catch this as a part 
         // of the grammar
-        ini_for_statement       : FOR ini SEMICOLON expression SEMICOLON update block SEMICOLON
+        // 2/27/2025, fixing the for statement for AST's compatibility
+        ini_for_statement       : FOR ini SEMICOLON expression SEMICOLON for_assignment block SEMICOLON
                                 ;
             // there can be mistake at that point, but I choose to risk
             // NOTE: omit the declaration in for loop
-            ini                     : init_assignment
+            ini                     : for_assignment
+                                    //init_assignment
                                     | init_declaration
                                     ;
                 init_assignment         : ID assignment_operator expression
                                         ;
+                // 2/27/2025 create a new rule used exclusively in ini_for_statement
+                // ease the creation of AST
+                for_assignment          : ID ASS     expression
+                                        | ID ADD_ASS expression
+                                        | ID SUB_ASS expression
+                                        | ID MUL_ASS expression
+                                        | ID DIV_ASS expression
+                                        | ID MOD_ASS expression
+                                        ;
                     // for_lhs                 : ID 2/25/2025
                     //                         ;
+                // NOTE
+                // 2/27/2025 may convert it into Assign with lhs ID and rhs Expr
                 init_declaration        : VAR ID type_part EQUAL expression
                                         | VAR ID           EQUAL expression
                                         ;

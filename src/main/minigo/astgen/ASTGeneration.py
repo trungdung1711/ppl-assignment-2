@@ -368,3 +368,44 @@ class ASTGeneration(MiniGoVisitor):
     '''
     def visitMethod_declaration(self, ctx:MiniGoParser.Method_declarationContext):
         return MethodDecl(receiver=ctx.ID(0).getText(), recType=self.visit(ctx.type_part(0)), fun=FuncDecl(name=ctx.ID(1).getText(), params=self.visit(ctx.field_list()), retType=self.visit(ctx.type_part(1)), body=self.visit(ctx.block()))) if ctx.type_part(1) else MethodDecl(receiver=ctx.ID(0).getText(), recType=self.visit(ctx.type_part(0)), fun=FuncDecl(name=ctx.ID(1).getText(), params=self.visit(ctx.field_list()), retType=VoidType(), body=self.visit(ctx.block())))
+    
+
+    '''
+    #==============================
+    AST: AST.Assign
+    - lhs : LHS
+    - rhs : Expr
+    #==============================
+    '''
+    def visitAssignment_statement(self, ctx:MiniGoParser.Assignment_statementContext):
+        if ctx.ASS():
+            return Assign(lhs=self.visit(ctx.lhs()), rhs=self.visit(ctx.expression()))
+        elif ctx.ADD_ASS():
+            return Assign(lhs=self.visit(ctx.lhs()), rhs=BinaryOp(op=str('+'), left=self.visit(ctx.lhs()), right=self.visit(ctx.expression())))
+        elif ctx.SUB_ASS():
+            return Assign(lhs=self.visit(ctx.lhs()), rhs=BinaryOp(op=str('-'), left=self.visit(ctx.lhs()), right=self.visit(ctx.expression())))
+        elif ctx.MUL_ASS():
+            return Assign(lhs=self.visit(ctx.lhs()), rhs=BinaryOp(op=str('*'), left=self.visit(ctx.lhs()), right=self.visit(ctx.expression())))
+        elif ctx.DIV_ASS():
+            return Assign(lhs=self.visit(ctx.lhs()), rhs=BinaryOp(op=str('/'), left=self.visit(ctx.lhs()), right=self.visit(ctx.expression())))
+        elif ctx.MOD_ASS():
+            return Assign(lhs=self.visit(ctx.lhs()), rhs=BinaryOp(op=str('%'), left=self.visit(ctx.lhs()), right=self.visit(ctx.expression())))
+        
+
+    '''
+    #==============================
+    AST: AST.BinaryOp
+    - op : str
+    - left : Expr
+    - right : Expr
+    #==============================
+    '''
+
+
+    '''
+    #==============================
+    AST: AST.ForBasic
+    - cond : Expr
+    - loop : Block
+    #==============================
+    '''
