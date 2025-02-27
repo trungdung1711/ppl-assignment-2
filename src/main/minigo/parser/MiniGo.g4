@@ -693,15 +693,14 @@ statement           : variable_declaration  // O    O
             //                         | boolean_literal
             //                         ;
     // MAP
-    assignment_statement    : lhs ASS     expression SEMICOLON
-                            | lhs ADD_ASS expression SEMICOLON
-                            | lhs SUB_ASS expression SEMICOLON
-                            | lhs MUL_ASS expression SEMICOLON
-                            | lhs DIV_ASS expression SEMICOLON
-                            | lhs MOD_ASS expression SEMICOLON
+    // 2/27/2025 fixing the assignment statement to fit the AST's structure
+    assignment_statement    : lhs assignment_operator expression SEMICOLON
                             ;
+        // 2/27/2025 -> there is no reuse part of the
+        // assignment part -> no need for doing that
+        // assignment_part     : lhs assignment_operator expression
+        //                     ;
         assignment_operator     : ASS
-                                // the only operator, that can be changed from assignment to declaration
                                 | ADD_ASS
                                 | SUB_ASS
                                 | MUL_ASS
@@ -810,16 +809,9 @@ statement           : variable_declaration  // O    O
                                     //init_assignment
                                     | init_declaration
                                     ;
-                init_assignment         : ID assignment_operator expression
-                                        ;
                 // 2/27/2025 create a new rule used exclusively in ini_for_statement
                 // ease the creation of AST
-                for_assignment          : ID ASS     expression
-                                        | ID ADD_ASS expression
-                                        | ID SUB_ASS expression
-                                        | ID MUL_ASS expression
-                                        | ID DIV_ASS expression
-                                        | ID MOD_ASS expression
+                for_assignment          : ID assignment_operator expression
                                         ;
                     // for_lhs                 : ID 2/25/2025
                     //                         ;
@@ -830,8 +822,6 @@ statement           : variable_declaration  // O    O
                                         ;
             // condition               : expression
             //                         ;
-            update                  : ID assignment_operator expression
-                                    ;
         range_for_statement     : FOR ID COMMA ID ASS RANGE expression block SEMICOLON
                                 ;
             // index                   : ID 2/21/2025

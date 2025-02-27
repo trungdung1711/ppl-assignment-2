@@ -379,19 +379,13 @@ class ASTGeneration(MiniGoVisitor):
     #==============================
     '''
     def visitAssignment_statement(self, ctx:MiniGoParser.Assignment_statementContext):
-        if ctx.ASS():
+        binary_operator = self.visit(ctx.assignment_operator())
+        if binary_operator is None:
+            # Case ASS
             return Assign(lhs=self.visit(ctx.lhs()), rhs=self.visit(ctx.expression()))
-        elif ctx.ADD_ASS():
-            return Assign(lhs=self.visit(ctx.lhs()), rhs=BinaryOp(op=str('+'), left=self.visit(ctx.lhs()), right=self.visit(ctx.expression())))
-        elif ctx.SUB_ASS():
-            return Assign(lhs=self.visit(ctx.lhs()), rhs=BinaryOp(op=str('-'), left=self.visit(ctx.lhs()), right=self.visit(ctx.expression())))
-        elif ctx.MUL_ASS():
-            return Assign(lhs=self.visit(ctx.lhs()), rhs=BinaryOp(op=str('*'), left=self.visit(ctx.lhs()), right=self.visit(ctx.expression())))
-        elif ctx.DIV_ASS():
-            return Assign(lhs=self.visit(ctx.lhs()), rhs=BinaryOp(op=str('/'), left=self.visit(ctx.lhs()), right=self.visit(ctx.expression())))
-        elif ctx.MOD_ASS():
-            return Assign(lhs=self.visit(ctx.lhs()), rhs=BinaryOp(op=str('%'), left=self.visit(ctx.lhs()), right=self.visit(ctx.expression())))
-        
+        binary_operator.left = self.visit(ctx.lhs())
+        binary_operator.right = self.visit(ctx.expression())
+        return Assign(lhs=self.visit(ctx.lhs()), rhs=binary_operator)
 
     '''
     #==============================
@@ -401,6 +395,19 @@ class ASTGeneration(MiniGoVisitor):
     - right : Expr
     #==============================
     '''
+    def visitAssignment_operator(self, ctx:MiniGoParser.Assignment_operatorContext):
+        if ctx.ASS():
+            return None
+        elif ctx.ADD_ASS():
+            return BinaryOp(op=str('+'), left=None, right=None)
+        elif ctx.SUB_ASS():
+            return BinaryOp(op=str('-'), left=None, right=None)
+        elif ctx.MUL_ASS():
+            return BinaryOp(op=str('*'), left=None, right=None)
+        elif ctx.DIV_ASS():
+            return BinaryOp(op=str('/'), left=None, right=None)
+        elif ctx.MOD_ASS():
+            return BinaryOp(op=str('%'), left=None, right=None)
 
 
     '''
