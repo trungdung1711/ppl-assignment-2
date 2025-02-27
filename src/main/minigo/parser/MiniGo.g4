@@ -790,11 +790,13 @@ statement           : variable_declaration  // O    O
             - form for iterating over an array
      */
     // NOTE: add 
+    // MAP
     for_statement           : basic_for_statement
                             | ini_for_statement
                             | range_for_statement
                             ;
         // change to condition for synchronisation
+        // MAP
         basic_for_statement     : FOR expression block SEMICOLON
                                 ;
         // if you want the  to be nothing, then in the same line of [}
@@ -828,6 +830,7 @@ statement           : variable_declaration  // O    O
                                         ;
             // condition               : expression
             //                         ;
+        // MAP
         range_for_statement     : FOR ID COMMA ID ASS RANGE expression block SEMICOLON
                                 ;
             // index                   : ID 2/21/2025

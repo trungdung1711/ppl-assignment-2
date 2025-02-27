@@ -408,6 +408,15 @@ class ASTGeneration(MiniGoVisitor):
             return BinaryOp(op=str('/'), left=None, right=None)
         elif ctx.MOD_ASS():
             return BinaryOp(op=str('%'), left=None, right=None)
+        
+
+    def visitFor_statement(self, ctx:MiniGoParser.For_statementContext):
+        if ctx.basic_for_statement():
+            return self.visit(ctx.basic_for_statement())
+        elif ctx.ini_for_statement():
+            return self.visit(ctx.ini_for_statement())
+        elif ctx.range_for_statement():
+            return self.visit(ctx.range_for_statement())
 
 
     '''
@@ -417,6 +426,8 @@ class ASTGeneration(MiniGoVisitor):
     - loop : Block
     #==============================
     '''
+    def visitBasic_for_statement(self, ctx:MiniGoParser.Basic_for_statementContext):
+        return ForBasic(cond=self.visit(ctx.expression()), loop=self.visit(ctx.block()))
 
 
     '''
@@ -448,3 +459,16 @@ class ASTGeneration(MiniGoVisitor):
 
     def visitInit_declaration(self, ctx:MiniGoParser.Init_declarationContext):
         return Assign(lhs=Id(name=ctx.ID().getText()), rhs=self.visit(ctx.expression())) if ctx.type_part() else Assign(lhs=Id(name=ctx.ID().getText()), rhs=self.visit(ctx.expression()))
+    
+
+    '''
+    #==============================
+    AST: AST.ForEach
+    - idx : Id
+    - value : Id
+    - arr : Expr
+    - loop : Block
+    #==============================
+    '''
+    def visitRange_for_statement(self, ctx:MiniGoParser.Range_for_statementContext):
+        return ForEach(idx=Id(ctx.ID(0).getText()), value=Id(ctx.ID(1).getText()), arr=self.visit(ctx.expression()), loop=self.visit(ctx.block()))
