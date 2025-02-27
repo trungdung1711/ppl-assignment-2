@@ -26,7 +26,7 @@ class ASTGeneration(MiniGoVisitor):
             text = ctx.HEXA_INTEGER().getText()
             base = 16
         
-        return IntLiteral(value=int(x=text, base=base))
+        return IntLiteral(value=int(text, base=base))
     
 
     '''
@@ -98,7 +98,7 @@ class ASTGeneration(MiniGoVisitor):
     
 
     def visitDimension_list(self, ctx:MiniGoParser.Dimension_listContext):
-        return [self.visit(ctx.dimension())] if ctx.getChildCount() == 1 else [self.visit(ctx.dimension)] + self.visit(ctx.dimension_list)
+        return [self.visit(ctx.dimension())] if ctx.getChildCount() == 1 else [self.visit(ctx.dimension())] + self.visit(ctx.dimension_list())
     
 
     def visitDimension(self, ctx:MiniGoParser.DimensionContext):
