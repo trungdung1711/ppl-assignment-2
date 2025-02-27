@@ -700,6 +700,7 @@ statement           : variable_declaration  // O    O
         // assignment part -> no need for doing that
         // assignment_part     : lhs assignment_operator expression
         //                     ;
+        // MAP
         assignment_operator     : ASS
                                 | ADD_ASS
                                 | SUB_ASS
@@ -801,22 +802,27 @@ statement           : variable_declaration  // O    O
         // if you enter -> SEMI, there must be grammar SEMI to catch this as a part 
         // of the grammar
         // 2/27/2025, fixing the for statement for AST's compatibility
+        // 2/2/27/2025, using for_assignment which is the AssignStmt specific in For
+        // MAP
         ini_for_statement       : FOR ini SEMICOLON expression SEMICOLON for_assignment block SEMICOLON
                                 ;
             // there can be mistake at that point, but I choose to risk
             // NOTE: omit the declaration in for loop
+            // MAP
             ini                     : for_assignment
                                     //init_assignment
                                     | init_declaration
                                     ;
                 // 2/27/2025 create a new rule used exclusively in ini_for_statement
                 // ease the creation of AST
+                // MAP
                 for_assignment          : ID assignment_operator expression
                                         ;
                     // for_lhs                 : ID 2/25/2025
                     //                         ;
                 // NOTE
                 // 2/27/2025 may convert it into Assign with lhs ID and rhs Expr
+                // MAP
                 init_declaration        : VAR ID type_part EQUAL expression
                                         | VAR ID           EQUAL expression
                                         ;

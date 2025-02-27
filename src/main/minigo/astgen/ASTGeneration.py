@@ -379,7 +379,7 @@ class ASTGeneration(MiniGoVisitor):
     #==============================
     '''
     def visitAssignment_statement(self, ctx:MiniGoParser.Assignment_statementContext):
-        binary_operator = self.visit(ctx.assignment_operator())
+        binary_operator: BinaryOp = self.visit(ctx.assignment_operator())
         if binary_operator is None:
             # Case ASS
             return Assign(lhs=self.visit(ctx.lhs()), rhs=self.visit(ctx.expression()))
@@ -417,3 +417,34 @@ class ASTGeneration(MiniGoVisitor):
     - loop : Block
     #==============================
     '''
+
+
+    '''
+    #==============================
+    AST: AST.ForStep
+    - init : Stmt
+    - cond : Expr
+    - upda : Assign
+    - loop : Block
+    #==============================
+    '''
+    def visitIni_for_statement(self, ctx:MiniGoParser.Ini_for_statementContext):
+        return ForStep(init=self.visit(ctx.ini()), cond=self.visit(ctx.expression()), upda=self.visit(ctx.for_assignment()), loop=self.visit(ctx.block()))
+    
+
+    def visitIni(self, ctx:MiniGoParser.IniContext):
+        return self.visit(ctx.for_assignment()) if ctx.for_assignment() else self.visit(ctx.init_declaration())
+    
+
+    def visitFor_assignment(self, ctx:MiniGoParser.For_assignmentContext):
+        binary_operator: BinaryOp = self.visit(ctx.assignment_operator())
+        if binary_operator is None:
+            # Case ASS
+            return Assign(lhs=Id(name=ctx.ID().getText()), rhs=self.visit(ctx.expression()))
+        binary_operator.left = Id(name=ctx.ID().getText())
+        binary_operator.right = self.visit(ctx.expression())
+        return Assign(lhs=Id(name=ctx.ID().getText()), rhs=binary_operator)
+    
+
+    def visitInit_declaration(self, ctx:MiniGoParser.Init_declarationContext):
+        return Assign(lhs=Id(name=ctx.ID().getText()), rhs=self.visit(ctx.expression())) if ctx.type_part() else Assign(lhs=Id(name=ctx.ID().getText()), rhs=self.visit(ctx.expression()))
