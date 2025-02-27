@@ -26,7 +26,7 @@ class ASTGeneration(MiniGoVisitor):
             text = ctx.HEXA_INTEGER().getText()
             base = 16
         
-        return IntLiteral(value=int(x=text, base=base))
+        return IntLiteral(value=int(text, base=base))
     
 
     '''
@@ -98,7 +98,7 @@ class ASTGeneration(MiniGoVisitor):
     
 
     def visitDimension_list(self, ctx:MiniGoParser.Dimension_listContext):
-        return [self.visit(ctx.dimension())] if ctx.getChildCount() == 1 else [self.visit(ctx.dimension)] + self.visit(ctx.dimension_list)
+        return [self.visit(ctx.dimension())] if ctx.getChildCount() == 1 else [self.visit(ctx.dimension())] + self.visit(ctx.dimension_list())
     
 
     def visitDimension(self, ctx:MiniGoParser.DimensionContext):
@@ -134,6 +134,8 @@ class ASTGeneration(MiniGoVisitor):
             return FloatLiteral(value=float(ctx.FLOATING_POINT().getText()))
         elif ctx.STRING_LITERAL():
             return StringLiteral(value=ctx.STRING_LITERAL().getText())
+        elif ctx.boolean_literal():
+            return self.visit(ctx.boolean_literal())
         elif ctx.NIL():
             return NilLiteral()
         elif ctx.struct_literal():
@@ -379,13 +381,10 @@ class ASTGeneration(MiniGoVisitor):
     #==============================
     '''
     def visitAssignment_statement(self, ctx:MiniGoParser.Assignment_statementContext):
-        binary_operator: BinaryOp = self.visit(ctx.assignment_operator())
-        if binary_operator is None:
-            # Case ASS
+        if self.visit(ctx.assignment_operator()) is None:
             return Assign(lhs=self.visit(ctx.lhs()), rhs=self.visit(ctx.expression()))
-        binary_operator.left = self.visit(ctx.lhs())
-        binary_operator.right = self.visit(ctx.expression())
-        return Assign(lhs=self.visit(ctx.lhs()), rhs=binary_operator)
+        return Assign(lhs=self.visit(ctx.lhs()), rhs=BinaryOp(op=self.visit(ctx.assignment_operator()), left=self.visit(ctx.lhs()), right=self.visit(ctx.expression())))
+
 
     '''
     #==============================
@@ -399,15 +398,15 @@ class ASTGeneration(MiniGoVisitor):
         if ctx.ASS():
             return None
         elif ctx.ADD_ASS():
-            return BinaryOp(op=str('+'), left=None, right=None)
+            return str('+')
         elif ctx.SUB_ASS():
-            return BinaryOp(op=str('-'), left=None, right=None)
+            return str('-')
         elif ctx.MUL_ASS():
-            return BinaryOp(op=str('*'), left=None, right=None)
+            return str('*')
         elif ctx.DIV_ASS():
-            return BinaryOp(op=str('/'), left=None, right=None)
+            return str('/')
         elif ctx.MOD_ASS():
-            return BinaryOp(op=str('%'), left=None, right=None)
+            return str('%')
         
 
     def visitFor_statement(self, ctx:MiniGoParser.For_statementContext):
@@ -448,13 +447,9 @@ class ASTGeneration(MiniGoVisitor):
     
 
     def visitFor_assignment(self, ctx:MiniGoParser.For_assignmentContext):
-        binary_operator: BinaryOp = self.visit(ctx.assignment_operator())
-        if binary_operator is None:
-            # Case ASS
+        if self.visit(ctx.assignment_operator()) is None:
             return Assign(lhs=Id(name=ctx.ID().getText()), rhs=self.visit(ctx.expression()))
-        binary_operator.left = Id(name=ctx.ID().getText())
-        binary_operator.right = self.visit(ctx.expression())
-        return Assign(lhs=Id(name=ctx.ID().getText()), rhs=binary_operator)
+        return Assign(lhs=Id(name=ctx.ID().getText()), rhs=BinaryOp(op=self.visit(ctx.assignment_operator()), left=Id(name=ctx.ID().getText()), right=self.visit(ctx.expression())))
     
 
     def visitInit_declaration(self, ctx:MiniGoParser.Init_declarationContext):
@@ -472,3 +467,197 @@ class ASTGeneration(MiniGoVisitor):
     '''
     def visitRange_for_statement(self, ctx:MiniGoParser.Range_for_statementContext):
         return ForEach(idx=Id(ctx.ID(0).getText()), value=Id(ctx.ID(1).getText()), arr=self.visit(ctx.expression()), loop=self.visit(ctx.block()))
+
+
+    def visitExpression(self, ctx:MiniGoParser.ExpressionContext):
+        return self.visit(ctx.ex1()) if ctx.getChildCount() == 1 else BinaryOp(op=str('||'), left=self.visit(ctx.expression()), right=self.visit(ctx.ex1()))
+    
+
+    def visitEx1(self, ctx:MiniGoParser.Ex1Context):
+        return self.visit(ctx.ex2()) if ctx.getChildCount() == 1 else BinaryOp(op=str('&&'), left=self.visit(ctx.ex1()), right=self.visit(ctx.ex2()))
+    
+
+    def visitEx2(self, ctx:MiniGoParser.Ex2Context):
+        return self.visit(ctx.ex3()) if ctx.getChildCount() == 1 else BinaryOp(op=self.visit(ctx.relational_operator()), left=self.visit(ctx.ex2()), right=self.visit(ctx.ex3()))
+    
+
+    def visitRelational_operator(self, ctx:MiniGoParser.Relational_operatorContext):
+        if ctx.DOUBLE_EQUAL():
+            return str('==')
+        elif ctx.NOT_EQUAL():
+            return str('!=')
+        elif ctx.LESS_THAN():
+            return str('<')
+        elif ctx.LESS_THAN_OR_EQUAL():
+            return str('<=')
+        elif ctx.GREATER_THAN():
+            return str('>')
+        elif ctx.GREATER_THAN_OR_EQUAL():
+            return str('>=')
+        
+
+    def visitEx3(self, ctx:MiniGoParser.Ex3Context):
+        return self.visit(ctx.ex4()) if ctx.getChildCount() == 1 else BinaryOp(op=self.visit(ctx.binary_add_sub()), left=self.visit(ctx.ex3()), right=self.visit(ctx.ex4()))
+
+
+    def visitBinary_add_sub(self, ctx:MiniGoParser.Binary_add_subContext):
+        return str('+') if ctx.ADD() else str('-')
+    
+
+    def visitEx4(self, ctx:MiniGoParser.Ex4Context):
+        return self.visit(ctx.ex5()) if ctx.getChildCount() == 1 else BinaryOp(op=self.visit(ctx.mul_div_mod()), left=self.visit(ctx.ex4()), right=self.visit(ctx.ex5()))
+
+    def visitMul_div_mod(self, ctx:MiniGoParser.Mul_div_modContext):
+        if ctx.MUL():
+            return str('*')
+        elif ctx.DIV():
+            return str('/')
+        elif ctx.MOD():
+            return str('%')
+    
+
+    '''
+    #==============================
+    AST: AST.UnaryOp
+    - op : str
+    - body : Expr
+    #==============================
+    '''
+    def visitEx5(self, ctx:MiniGoParser.Ex5Context):
+        return self.visit(ctx.ex6()) if ctx.getChildCount() == 1 else UnaryOp(op=self.visit(ctx.unary_not_sub()), body=self.visit(ctx.ex5()))
+    
+
+    def visitUnary_not_sub(self, ctx:MiniGoParser.Unary_not_subContext):
+        return str('!') if ctx.NOT() else str('-')
+    
+
+    def visitEx6(self, ctx:MiniGoParser.Ex6Context):
+        if ctx.ex7():
+            return self.visit(ctx.ex7())
+        elif ctx.index_list():
+            return ArrayCell(arr=self.visit(ctx.ex6()), idx=self.visit(ctx.index_list))
+        elif ctx.argument_list():
+            return MethCall(receiver=self.visit(ctx.ex6()), metName=ctx.ID().getText(), args=self.visit(ctx.argument_list()))
+        else:
+            return FieldAccess(receiver=self.visit(ctx.ex6()), field=ctx.ID().getText())
+    
+
+    def visitEx7(self, ctx:MiniGoParser.Ex7Context):
+        if ctx.literal():
+            return self.visit(ctx.literal())
+        elif ctx.argument_list():
+            return FuncCall(funName=ctx.ID().getText(), args=self.visit(ctx.argument_list()))
+        elif ctx.expression():
+            return self.visit(ctx.expression())
+        else:
+            return Id(ctx.ID().getText())
+    
+
+    def visitLiteral(self, ctx:MiniGoParser.LiteralContext):
+        if ctx.integer_literal():
+            return self.visit(ctx.integer_literal())
+        elif ctx.FLOATING_POINT():
+            return FloatLiteral(value=float(ctx.FLOATING_POINT().getText()))
+        elif ctx.STRING_LITERAL():
+            return StringLiteral(value=ctx.STRING_LITERAL().getText())
+        elif ctx.boolean_literal():
+            return self.visit(ctx.boolean_literal())
+        elif ctx.NIL():
+            return NilLiteral()
+        elif ctx.array_literal():
+            return self.visit(ctx.array_literal())
+        elif ctx.struct_literal():
+            return self.visit(ctx.struct_literal())
+        
+
+    '''
+    #==============================
+    AST: AST.Block
+    - member : List[BlockMember]
+    #==============================
+    '''
+    def visitBlock(self, ctx:MiniGoParser.BlockContext):
+        return Block(member=self.visit(ctx.block_member_list()))
+    
+
+    def visitBlock_member_list(self, ctx:MiniGoParser.Block_member_listContext):
+        return [self.visit(ctx.block_member())] if ctx.getChildCount() == 1 else [self.visit(ctx.block_member())] + self.visit(ctx.block_member_list())
+    
+
+    def visitBlock_member(self, ctx:MiniGoParser.Block_memberContext):
+        return self.visit(ctx.statement())
+    
+
+    '''
+    #==============================
+    AST: AST.VarDecl
+    - varName : str
+    - varType : Type
+    - varInit : Expr
+    #==============================
+    '''
+    def visitVariable_declaration(self, ctx:MiniGoParser.Variable_declarationContext):
+        if not ctx.expression():
+            return VarDecl(varName=ctx.ID().getText(), varType=self.visit(ctx.type_part()), varInit=None)
+        elif not ctx.type_part():
+            return VarDecl(varName=ctx.ID().getText(), varType=None, varInit=self.visit(ctx.expression()))
+        else:
+            return VarDecl(varName=ctx.ID().getText(), varType=self.visit(ctx.type_part()), varInit=self.visit(ctx.expression()))
+        
+
+    '''
+    #==============================
+    AST: AST.ConstDecl
+    - conName : str
+    - conType : Type
+    - iniExpr : Expr
+    #==============================
+    '''
+    def visitConstant_declaration(self, ctx:MiniGoParser.Constant_declarationContext):
+        return ConstDecl(conName=ctx.ID().getText(), conType=None, iniExpr=self.visit(ctx.expression()))
+    
+
+    '''
+    #==============================
+    AST: AST.Program
+    - decl : List[Decl]
+    #==============================
+    '''
+    def visitProgram(self, ctx:MiniGoParser.ProgramContext):
+        return Program(decl=self.visit(ctx.declaration_list()))
+    
+
+    def visitDeclaration_list(self, ctx:MiniGoParser.Declaration_listContext):
+        return [self.visit(ctx.declaration())] if ctx.getChildCount() == 1 else [self.visit(ctx.declaration())] + self.visit(ctx.declaration_list())
+    
+
+    def visitDeclaration(self, ctx:MiniGoParser.DeclarationContext):
+        if ctx.constant_declaration():
+            return self.visit(ctx.constant_declaration())
+        elif ctx.variable_declaration():
+            return self.visit(ctx.variable_declaration())
+        elif ctx.type_declaration():
+            return self.visit(ctx.type_declaration())
+        elif ctx.function_declaration():
+            return self.visit(ctx.function_declaration())
+    
+
+    def visitStatement(self, ctx:MiniGoParser.StatementContext):
+        if ctx.variable_declaration():
+            return self.visit(ctx.variable_declaration())
+        elif ctx.constant_declaration():
+            return self.visit(ctx.constant_declaration())
+        elif ctx.assignment_statement():
+            return self.visit(ctx.assignment_statement())
+        elif ctx.if_statement():
+            return self.visit(ctx.if_statement())
+        elif ctx.for_statement():
+            return self.visit(ctx.for_statement())
+        elif ctx.break_statement():
+            return self.visit(ctx.break_statement())
+        elif ctx.continue_statement():
+            return self.visit(ctx.continue_statement())
+        elif ctx.call_statement():
+            return self.visit(ctx.call_statement())
+        elif ctx.return_statement():
+            return self.visit(ctx.return_statement())
