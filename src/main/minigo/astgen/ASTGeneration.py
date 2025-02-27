@@ -586,3 +586,20 @@ class ASTGeneration(MiniGoVisitor):
 
     def visitBlock_member(self, ctx:MiniGoParser.Block_memberContext):
         return self.visit(ctx.statement())
+    
+
+    '''
+    #==============================
+    AST: AST.VarDecl
+    - varName : str
+    - varType : Type
+    - varInit : Expr
+    #==============================
+    '''
+    def visitVariable_declaration(self, ctx:MiniGoParser.Variable_declarationContext):
+        if not ctx.expression():
+            return VarDecl(varName=ctx.ID().getText(), varType=self.visit(ctx.type_part()), varInit=None)
+        elif not ctx.type_part():
+            return VarDecl(varName=ctx.ID().getText(), varType=None, varInit=self.visit(ctx.expression()))
+        else:
+            return VarDecl(varName=ctx.ID().getText(), varType=self.visit(ctx.type_part()), varInit=self.visit(ctx.expression()))

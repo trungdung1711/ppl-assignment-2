@@ -497,6 +497,7 @@ statement           : variable_declaration  // O    O
     // NOTES
     // fixing
     // Comment out the fourth rule, as there must be at least type or initialisation
+    // MAP
     variable_declaration    : VAR ID type_part EQUAL expression SEMICOLON
                             | VAR ID type_part                  SEMICOLON
                             | VAR ID           EQUAL expression SEMICOLON
