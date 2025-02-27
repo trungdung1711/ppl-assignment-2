@@ -603,3 +603,61 @@ class ASTGeneration(MiniGoVisitor):
             return VarDecl(varName=ctx.ID().getText(), varType=None, varInit=self.visit(ctx.expression()))
         else:
             return VarDecl(varName=ctx.ID().getText(), varType=self.visit(ctx.type_part()), varInit=self.visit(ctx.expression()))
+        
+
+    '''
+    #==============================
+    AST: AST.ConstDecl
+    - conName : str
+    - conType : Type
+    - iniExpr : Expr
+    #==============================
+    '''
+    def visitConstant_declaration(self, ctx:MiniGoParser.Constant_declarationContext):
+        return ConstDecl(conName=ctx.ID().getText(), conType=None, iniExpr=self.visit(ctx.expression()))
+    
+
+    '''
+    #==============================
+    AST: AST.Program
+    - decl : List[Decl]
+    #==============================
+    '''
+    def visitProgram(self, ctx:MiniGoParser.ProgramContext):
+        return Program(decl=self.visit(ctx.declaration_list()))
+    
+
+    def visitDeclaration_list(self, ctx:MiniGoParser.Declaration_listContext):
+        return [self.visit(ctx.declaration())] if ctx.getChildCount() == 1 else [self.visit(ctx.declaration())] + self.visit(ctx.declaration_list())
+    
+
+    def visitDeclaration(self, ctx:MiniGoParser.DeclarationContext):
+        if ctx.constant_declaration():
+            return self.visit(ctx.constant_declaration())
+        elif ctx.variable_declaration():
+            return self.visit(ctx.variable_declaration())
+        elif ctx.type_declaration():
+            return self.visit(ctx.type_declaration())
+        elif ctx.function_declaration():
+            return self.visit(ctx.function_declaration())
+    
+
+    def visitStatement(self, ctx:MiniGoParser.StatementContext):
+        if ctx.variable_declaration():
+            return self.visit(ctx.variable_declaration())
+        elif ctx.constant_declaration():
+            return self.visit(ctx.constant_declaration())
+        elif ctx.assignment_statement():
+            return self.visit(ctx.assignment_statement())
+        elif ctx.if_statement():
+            return self.visit(ctx.if_statement())
+        elif ctx.for_statement():
+            return self.visit(ctx.for_statement())
+        elif ctx.break_statement():
+            return self.visit(ctx.break_statement())
+        elif ctx.continue_statement():
+            return self.visit(ctx.continue_statement())
+        elif ctx.call_statement():
+            return self.visit(ctx.call_statement())
+        elif ctx.return_statement():
+            return self.visit(ctx.return_statement())

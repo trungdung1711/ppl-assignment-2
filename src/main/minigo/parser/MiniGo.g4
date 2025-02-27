@@ -483,6 +483,7 @@ declaration         : constant_declaration  // global things            O
                                     ;
 // it doesn't contain function_declaration, thus a block should have multiple statements
 // check-out list for AST generation
+// MAP
 statement           : variable_declaration  // O    O
                     | constant_declaration  // O    O
                     | assignment_statement  // O    O
@@ -702,6 +703,7 @@ statement           : variable_declaration  // O    O
     // In C++, const int y = x + 10; is allowed, but x might change later, causing confusion.
     // note about constexpr
     // CHECK
+    // MAP
     constant_declaration    : CONST ID EQUAL expression SEMICOLON;
         // const_name              : ID; 2/21/2025
         // should be a general expression (no need to separate them)
