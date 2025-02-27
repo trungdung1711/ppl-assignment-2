@@ -463,11 +463,14 @@ declaration         : constant_declaration  // global things            O
                                         //                         ;
                     // name_type                   : ID type_part
                     //                                 ;
+            // MAP
             block                           : LCB block_member_list RCB
                                             ;
+                // MAP
                 block_member_list               : block_member block_member_list
                                                 | block_member
                                                 ;
+                    // MAP
                     block_member                    : statement
                                                     ;
             // NOTE: whether or not, there is a statement end???

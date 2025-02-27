@@ -568,3 +568,21 @@ class ASTGeneration(MiniGoVisitor):
             return self.visit(ctx.array_literal())
         elif ctx.struct_literal():
             return self.visit(ctx.struct_literal())
+        
+
+    '''
+    #==============================
+    AST: AST.Block
+    - member : List[BlockMember]
+    #==============================
+    '''
+    def visitBlock(self, ctx:MiniGoParser.BlockContext):
+        return Block(member=self.visit(ctx.block_member_list()))
+    
+
+    def visitBlock_member_list(self, ctx:MiniGoParser.Block_member_listContext):
+        return [self.visit(ctx.block_member())] if ctx.getChildCount() == 1 else [self.visit(ctx.block_member())] + self.visit(ctx.block_member_list())
+    
+
+    def visitBlock_member(self, ctx:MiniGoParser.Block_memberContext):
+        return self.visit(ctx.statement())
