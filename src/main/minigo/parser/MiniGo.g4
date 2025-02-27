@@ -541,15 +541,19 @@ statement           : variable_declaration  // O    O
         // value must be computable at compile time
         // initialisation          : EQUAL expression 2/21/2025
         //                         ;
+            // MAP
             expression              : expression OR ex1
                                     | ex1
                                     ;
+                // MAP
                 ex1                     : ex1 AND ex2
                                         | ex2 
                                         ;
+                    // MAP
                     ex2                     : ex2 relational_operator ex3
                                             | ex3
                                             ;
+                        // MAP
                         relational_operator     : DOUBLE_EQUAL
                                                 | NOT_EQUAL
                                                 | LESS_THAN
@@ -557,22 +561,28 @@ statement           : variable_declaration  // O    O
                                                 | GREATER_THAN
                                                 | GREATER_THAN_OR_EQUAL
                                                 ;
+                        // MAP
                         ex3                     : ex3 binary_add_sub ex4
                                                 | ex4
                                                 ;
+                            // MAP
                             binary_add_sub          : ADD
                                                     | SUB
                                                     ;
+                            // MAP
                             ex4                     : ex4 mul_div_mod ex5
                                                     | ex5
                                                     ;
+                                // MAP
                                 mul_div_mod             : MUL
                                                         | DIV
                                                         | MOD
                                                         ;
+                                // MAP
                                 ex5                     : unary_not_sub ex5
                                                         | ex6
                                                         ;
+                                    // MAP
                                     unary_not_sub           : NOT
                                                             | SUB
                                                             ;
@@ -582,11 +592,19 @@ statement           : variable_declaration  // O    O
                                     // CHECK -> create MethCall
                                     // 2/25/2025 modify the array access expression to
                                     // follow the AST's structure
+                                    // AST unification happens at this state
+                                    // with the LHS and expression
+                                    // ArrayCell
+                                    // FieldAccess
+                                    // MethCall
+                                    // MAP
                                     ex6                     : ex6 index_list                     // array access
                                                             | ex6 DOT ID LP argument_list RP     // with the receiver before the DOT operator
                                                             | ex6 DOT ID                         // 2/25/2025 - deleting intermediate function_call rule
                                                             | ex7                                // at this point -> create MethCall()
                                                             ;
+                                        // function call
+                                        // MAP
                                         ex7                     : literal
                                                                 | ID                        // can be merged and let semantic analysis to handle??
                                                                 | ID LP argument_list RP    // 2/25/2025 - deleting intermediate parser rule
@@ -598,6 +616,7 @@ statement           : variable_declaration  // O    O
                                             //                         ;
                                                 // function_call           : ID LP argument_list RP - 2/25/2025 remove function_call
                                                 //                         ; -> making it embedded into other rules for intuition
+                                            // MAP
                                             literal                 : integer_literal
                                                                     | FLOATING_POINT
                                                                     | STRING_LITERAL
