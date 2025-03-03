@@ -831,6 +831,7 @@ statement           : variable_declaration  // O    O
         // 2/27/2025, fixing the for statement for AST's compatibility
         // 2/2/27/2025, using for_assignment which is the AssignStmt specific in For
         // MAP
+        // MUST
         ini_for_statement       : FOR ini SEMICOLON expression SEMICOLON for_assignment block SEMICOLON
                                 ;
             // there can be mistake at that point, but I choose to risk

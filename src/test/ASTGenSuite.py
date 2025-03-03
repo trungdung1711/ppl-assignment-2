@@ -90,3 +90,1560 @@ class ASTGenSuite(unittest.TestCase):
             )
         )
         self.assertTrue(TestAST.checkASTGen(input,expect,305))
+
+
+    def test_simple_struct_declaration_just_return_struct_type_not_GenDecl_node_like_real_Go(self):
+        input = """
+            type Human struct {
+                name string
+                age int
+                money float
+                son Human
+            }
+        """
+        expect = str(
+            Program(
+                [
+                    StructType(
+                        'Human',
+                        [
+                            ('name', StringType()),
+                            ('age', IntType()),
+                            ('money', FloatType()),
+                            ('son', Id('Human'))
+                        ],
+                        []
+                    )
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input,expect,306))
+
+
+    '''
+    #==============================
+    AST: AST.IntLiteral
+    - value : int
+    #==============================
+    '''
+    def test_integer_literal_AST_node_creation(self):
+        input = \
+        """
+        var a int = 32;
+        var b int = 0
+        var c int = 0b100000
+        var d int = 0B100000;
+        var e int = 0o40
+        var f int = 0O40
+        var g int = 0x20
+        var h int = 0X20;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(32)),
+                    VarDecl('b', IntType(), IntLiteral(0)),
+                    VarDecl('c', IntType(), IntLiteral(32)),
+                    VarDecl('d', IntType(), IntLiteral(32)),
+                    VarDecl('e', IntType(), IntLiteral(32)),
+                    VarDecl('f', IntType(), IntLiteral(32)),
+                    VarDecl('g', IntType(), IntLiteral(32)),
+                    VarDecl('h', IntType(), IntLiteral(32)),
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input,expect,307))
+
+
+    '''
+    #==============================
+    AST: AST.BooleanLiteral
+    - value : bool
+    #==============================
+    '''
+    def test_bool_literal_creation(self):
+        input = \
+        """
+        const a = true;
+        const b = false;
+        var c = true;
+        var d boolean = false;
+        var e boolean = ((true || false) && true);
+        func main() {
+            return a && b && c && d && e;
+        };
+        """
+        expect = str(
+            Program(
+                [
+                    ConstDecl('a', None, BooleanLiteral(True)),
+                    ConstDecl('b', None, BooleanLiteral(False)),
+                    VarDecl('c', None, BooleanLiteral(True)),
+                    VarDecl('d', BoolType(), BooleanLiteral(False)),
+                    VarDecl(
+                        'e', 
+                        BoolType(),
+                        BinaryOp(
+                            '&&',
+                            BinaryOp
+                            (
+                                '||',
+                                BooleanLiteral(True),
+                                BooleanLiteral(False)
+                            ),
+                            BooleanLiteral(True)
+                        )),
+                    FuncDecl(
+                        'main',
+                        [],
+                        VoidType(),
+                        Block(
+                            [
+                                Return(
+                                    BinaryOp(
+                                        '&&',
+                                        BinaryOp(
+                                            '&&',
+                                            BinaryOp(
+                                                '&&',
+                                                BinaryOp(
+                                                    '&&',
+                                                    Id('a'),
+                                                    Id('b')
+                                                ),
+                                                Id('c')
+                                            ),
+                                            Id('d')
+                                        ),
+                                        Id('e')
+                                    )
+                                )
+                            ]
+                        )
+                    )
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input,expect,308))
+
+
+    '''
+    #==============================
+    AST: AST.Break
+    AST: AST.Continue
+    AST: AST.Return
+    - expr : Expr
+    #==============================
+    '''
+    def test_309(self):
+        input = \
+        """
+        func something() int {
+            for index := 0; index < 100; index := index + 3 {
+                if (index == 1) {
+                    break;
+                } else if (index == 2) {
+                    return (index * 100) - index;
+                } else if (index % 3 == 0) {
+                    continue;
+                } else {
+                    return -1
+                }
+            }
+            return index;
+        }
+        """
+        expect = str(
+            Program(
+                [
+                    FuncDecl(
+                        'something',
+                        [],
+                        IntType(),
+                        Block(
+                            [
+                                ForStep(
+                                    Assign(
+                                        Id('index'),
+                                        IntLiteral(0)
+                                    ),
+                                    BinaryOp(
+                                        '<',
+                                        Id('index'),
+                                        IntLiteral(100)
+                                    ),
+                                    Assign(
+                                        Id('index'),
+                                        BinaryOp(
+                                            '+',
+                                            Id('index'),
+                                            IntLiteral(3)
+                                        )
+                                    ),
+                                    Block(
+                                        [
+                                            If(
+                                                BinaryOp('==', Id('index'), IntLiteral(1)),
+                                                Block(
+                                                    [Break()]
+                                                ),
+                                                If(
+                                                    BinaryOp('==', Id('index'), IntLiteral(2)),
+                                                    Block(
+                                                        [
+                                                            Return(
+                                                                BinaryOp('-', BinaryOp('*', Id('index'), IntLiteral(100)), Id('index'))
+                                                            )
+                                                        ]
+                                                    ),
+                                                    If(
+                                                        BinaryOp('==', BinaryOp('%', Id('index'), IntLiteral(3)), IntLiteral(0)),
+                                                        Block(
+                                                            [
+                                                                Continue()
+                                                            ]
+                                                        ),
+                                                        Block(
+                                                            [
+                                                                Return(
+                                                                    UnaryOp(
+                                                                        '-',
+                                                                        IntLiteral(1)
+                                                                    )
+                                                                )
+                                                            ]
+                                                        )
+                                                    )
+                                                )
+                                            )
+                                        ]
+                                    )
+                                ),
+                                Return(
+                                    Id('index')
+                                )
+                            ]
+                        )
+                    )
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 309))
+
+
+    '''
+    #==============================
+    AST: AST.IntType
+         AST.FloatType
+         AST.BoolType
+         AST.StringType
+    #==============================
+    '''
+    def test_310(self):
+        input = \
+        """
+        var a int = 9999;
+        var b float = 0.125;
+        var c boolean = false;
+        var d string = "Hello World\\n"
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(9999)),
+                    VarDecl('b', FloatType(), FloatLiteral(0.125)),
+                    VarDecl('c', BoolType(), BooleanLiteral(False)),
+                    VarDecl('d', StringType(), StringLiteral('"Hello World\\n"'))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 310))
+
+
+    '''
+    #==============================
+    AST: AST.ArrayType
+    - dimens : List[Expr]
+    - eleType : Type
+    #==============================
+    '''
+    def test_311(self):
+        input = \
+        """
+        var a [3]int = [3]int{1, 2, 3};
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl(
+                        'a',
+                        ArrayType(
+                            [
+                                IntLiteral(3)
+                            ],
+                            IntType()
+                        ),
+                        ArrayLiteral(
+                            [
+                                IntLiteral(3)
+                            ],
+                            IntType(),
+                            [
+                                IntLiteral(1),
+                                IntLiteral(2),
+                                IntLiteral(3)
+                            ]
+                        )
+                    )
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 311))
+
+
+    def test_312(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 312))
+
+
+    def test_313(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 313))
+
+
+    def test_314(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 314))
+
+
+    def test_315(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 315))
+
+
+    def test_316(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 316))
+
+
+    def test_317(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 317))
+
+
+    def test_318(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 318))
+
+    def test_319(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 319))
+
+    def test_320(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 320))
+
+    def test_321(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 321))
+
+    def test_322(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 322))
+
+    def test_323(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 323))
+
+    def test_324(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 324))
+
+    def test_325(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 325))
+
+    def test_326(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 326))
+
+    def test_327(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 327))
+
+    def test_328(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 328))
+
+    def test_329(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 329))
+
+    def test_330(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 330))
+
+    def test_331(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 331))
+
+    def test_332(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 332))
+
+    def test_333(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 333))
+
+    def test_334(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 334))
+
+    def test_335(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 335))
+
+    def test_336(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 336))
+
+    def test_337(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 337))
+
+    def test_338(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 338))
+
+    def test_339(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 339))
+
+    def test_340(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 340))
+
+    def test_341(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 341))
+
+    def test_342(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 342))
+
+    def test_343(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 343))
+
+    def test_344(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 344))
+
+    def test_345(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 345))
+
+    def test_346(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 346))
+
+    def test_347(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 347))
+
+    def test_348(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 348))
+
+    def test_349(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 349))
+
+
+    def test_350(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 350))
+
+
+    def test_351(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 351))
+
+
+    def test_352(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 352))
+
+
+    def test_353(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 353))
+
+
+    def test_354(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 354))
+
+
+    def test_355(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 355))
+
+
+    def test_356(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 356))
+
+
+    def test_357(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 357))
+
+
+    def test_358(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 358))
+
+    def test_359(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 359))
+
+    def test_360(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 360))
+
+    def test_361(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 361))
+
+    def test_362(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 362))
+
+    def test_363(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 363))
+
+    def test_364(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 364))
+
+    def test_365(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 365))
+
+    def test_366(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 366))
+
+    def test_367(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 367))
+
+    def test_368(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 368))
+
+    def test_369(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 369))
+
+    def test_370(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 370))
+
+    def test_371(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 371))
+
+    def test_372(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 372))
+
+    def test_373(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 373))
+
+    def test_374(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 374))
+
+    def test_375(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 375))
+
+    def test_376(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 376))
+
+    def test_377(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 377))
+
+    def test_378(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 378))
+
+    def test_379(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 379))
+
+    def test_380(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 380))
+
+    def test_381(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 381))
+
+    def test_382(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 382))
+
+    def test_383(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 383))
+
+    def test_384(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 384))
+
+    def test_385(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 385))
+
+    def test_386(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 386))
+
+    def test_387(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 387))
+
+    def test_388(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 388))
+
+    def test_389(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 389))
+
+    def test_390(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 390))
+
+    def test_391(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 391))
+
+    def test_392(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 392))
+
+    def test_393(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 393))
+
+    def test_394(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 394))
+
+    def test_395(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 395))
+
+    def test_396(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 396))
+
+    def test_397(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 397))
+
+    def test_398(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 398))
+
+    def test_399(self):
+        input = \
+        """
+        var a int = 1;
+        """
+        expect = str(
+            Program(
+                [
+                    VarDecl('a', IntType(), IntLiteral(1))
+                ]
+            )
+        )
+        self.assertTrue(TestAST.checkASTGen(input, expect, 399))

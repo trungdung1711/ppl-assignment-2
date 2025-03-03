@@ -7,7 +7,7 @@ class ASTGeneration(MiniGoVisitor):
 
     '''
     #==============================
-    AST: AST.IntegerLiteral
+    AST: AST.IntLiteral
     - value : int
     #==============================
     '''
@@ -274,7 +274,7 @@ class ASTGeneration(MiniGoVisitor):
 
 
     def visitStruct_declaration(self, ctx:MiniGoParser.Struct_declarationContext):
-        return StructType(name=ctx.ID().getText(), elements=self.visit(ctx.property_declaration_list()), methods=None)
+        return StructType(name=ctx.ID().getText(), elements=self.visit(ctx.property_declaration_list()), methods=[])
 
 
     def visitProperty_declaration_list(self, ctx:MiniGoParser.Property_declaration_listContext):
@@ -506,6 +506,7 @@ class ASTGeneration(MiniGoVisitor):
 
     def visitEx4(self, ctx:MiniGoParser.Ex4Context):
         return self.visit(ctx.ex5()) if ctx.getChildCount() == 1 else BinaryOp(op=self.visit(ctx.mul_div_mod()), left=self.visit(ctx.ex4()), right=self.visit(ctx.ex5()))
+
 
     def visitMul_div_mod(self, ctx:MiniGoParser.Mul_div_modContext):
         if ctx.MUL():
