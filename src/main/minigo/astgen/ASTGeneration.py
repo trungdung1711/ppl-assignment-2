@@ -190,9 +190,22 @@ class ASTGeneration(MiniGoVisitor):
         return FieldAccess(receiver=self.visit(ctx.expression()), field=ctx.ID().getText())
     
 
+    # 3/5/2025 -> SOS fix the bug of ArrayCell
     def visitArray_index(self, ctx:MiniGoParser.Array_indexContext):
-        return ArrayCell(arr=self.visit(ctx.expression()), idx=self.visit(ctx.index_list()))
-    
+        # return ArrayCell(arr=self.visit(ctx.expression()), idx=self.visit(ctx.index_list()))
+        '''
+            Attempt to fix the bug of ArrayCell
+        '''
+        # result should be an ArrayCell
+        expression = self.visit(ctx.expression())
+        if isinstance(expression, ArrayCell):
+            # prevent expression to greedily consume the index_list
+            [expression.idx.append(index) for index in self.visit(ctx.index_list())]
+            return expression
+        else:
+            # normal case
+            return ArrayCell(arr=self.visit(ctx.expression()), idx=self.visit(ctx.index_list()))
+
 
     def visitIndex_list(self, ctx:MiniGoParser.Index_listContext):
         return [self.visit(ctx.index())] if ctx.getChildCount() == 1 else [self.visit(ctx.index())] + self.visit(ctx.index_list())
@@ -537,7 +550,7 @@ class ASTGeneration(MiniGoVisitor):
         if ctx.ex7():
             return self.visit(ctx.ex7())
         elif ctx.index_list():
-            return ArrayCell(arr=self.visit(ctx.ex6()), idx=self.visit(ctx.index_list))
+            return ArrayCell(arr=self.visit(ctx.ex6()), idx=self.visit(ctx.index_list()))
         elif ctx.argument_list():
             return MethCall(receiver=self.visit(ctx.ex6()), metName=ctx.ID().getText(), args=self.visit(ctx.argument_list()))
         else:

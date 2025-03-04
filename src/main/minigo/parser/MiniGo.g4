@@ -753,6 +753,11 @@ statement           : variable_declaration  // O    O
         // 2/25/2024 fixing the lhs rule for alignment with the AST
         // more specific case of the lhs
         // MAP
+        // SOS
+        // fixing the expression recursive affects lhs
+        // idea the expression of array_index must not include
+        // array_index -> wrong case
+        // -> must include array_index for a[1].c[2]
         lhs                     : field_access
                                 | array_index
                                 | ID
@@ -761,6 +766,11 @@ statement           : variable_declaration  // O    O
             field_access            : expression DOT ID
                                     ;
             // MAP
+            // should be expression that dont' contain the array access
+            // if there is expression that contains array access
+            // expression will catch all and only left one for the
+            // left hand side
+            // problem with lhs and expression
             array_index             : expression index_list
                                     ;
                 // MAP

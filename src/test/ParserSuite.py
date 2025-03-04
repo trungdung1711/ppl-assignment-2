@@ -33,3 +33,14 @@ class ParserSuite(unittest.TestCase):
         """
         expect = "successful"
         self.assertTrue(TestParser.checkParser(input,expect,202))
+
+
+    def test_correct_3(self):
+        input = \
+        """
+        func main() {
+        a.some_function()[1][2][3].eat()[1] := arr[1][2][3][4][5] + arr[5][4][3][2][1];
+        }
+        """
+        expect = "successful"
+        self.assertTrue(TestParser.checkParser(input,expect,203))

@@ -4,6 +4,14 @@ from AST import *
 
 
 class ASTGenSuite(unittest.TestCase):
+
+
+    '''
+    #==============================
+    AST: AST.Program
+    - decl : List[Decl]
+    #==============================
+    '''
     def test_simple_program(self):
         """Simple program: int main() {} """
         input = """func main() {
@@ -704,161 +712,803 @@ class ASTGenSuite(unittest.TestCase):
         self.assertTrue(TestAST.checkASTGen(input, expect, 315))
 
 
-    def test_316(self):
+    '''
+    #==============================
+    AST: AST.ConstDecl
+    - conName : str
+    - conType : Type
+    - iniExpr : Expr
+    #==============================
+    '''
+    def test_const_declaration(self):
         input = \
         """
-        var a int = 1;
+        const a = 100;
+        const a1 = 0o1234
+        const b = 0.125;
+        const c = "Hello World\\n"
+        const d = true;
+        const e = false;
+        const f = nil;
+        const g = Human{name : "Dung", ID : "2210573"};
+        const h = [3]int{1,2,3};
+        const i = [3][2][1]int{{{1},{2}},{{3},{4}},{{5},{6}}}
+        const j = true && false;
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    ConstDecl('a', None, IntLiteral(100)),
+                    ConstDecl('a1', None, IntLiteral(668)),
+                    ConstDecl('b', None, FloatLiteral(0.125)),
+                    ConstDecl('c', None, StringLiteral('"Hello World\\n"')),
+                    ConstDecl('d', None, BooleanLiteral(True)),
+                    ConstDecl('e', None, BooleanLiteral(False)),
+                    ConstDecl('f', None, NilLiteral()),
+                    ConstDecl(
+                        'g',
+                        None,
+                        StructLiteral(
+                            'Human',
+                            [
+                                ('name', StringLiteral('"Dung"')),
+                                ('ID', StringLiteral('"2210573"'))
+                            ]
+                        )
+                    ),
+                    ConstDecl(
+                        'h',
+                        None,
+                        ArrayLiteral(
+                            [
+                                IntLiteral(3)
+                            ],
+                            IntType(),
+                            [
+                                IntLiteral(1),
+                                IntLiteral(2),
+                                IntLiteral(3)
+                            ]
+                        )
+                    ),
+                    ConstDecl(
+                        'i',
+                        None,
+                        ArrayLiteral(
+                            [
+                                IntLiteral(3),
+                                IntLiteral(2),
+                                IntLiteral(1)
+                            ],
+                            IntType(),
+                            [
+                                [
+                                    [
+                                        IntLiteral(1)
+                                    ],
+                                    [
+                                        IntLiteral(2)
+                                    ]
+                                ],
+                                [
+                                    [
+                                        IntLiteral(3)
+                                    ],
+                                    [
+                                        IntLiteral(4)
+                                    ]
+                                ],
+                                [
+                                    [
+                                        IntLiteral(5)
+                                    ],
+                                    [
+                                        IntLiteral(6)
+                                    ]
+                                ]
+                            ]
+                        )
+                    ),
+                    ConstDecl(
+                        'j',
+                        None,
+                        BinaryOp(
+                            '&&',
+                            BooleanLiteral(True),
+                            BooleanLiteral(False)
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 316))
 
 
-    def test_317(self):
+    '''
+    #==============================
+    AST: AST.StructLiteral
+    - name str
+    - elements : List[Tuple[str, Expr]]
+    #==============================
+    '''
+    def test_struct_literal(self):
         input = \
         """
-        var a int = 1;
+        type Human struct {
+            money int
+            is_dead boolean
+        }
+
+        func main() {
+            var human Human = Human{money : 100, is_dead : false};
+            return;
+        }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    StructType(
+                        'Human',
+                        [
+                            ('money', IntType()),
+                            ('is_dead', BoolType())
+                        ],
+                        []
+                    ),
+                    FuncDecl(
+                        'main',
+                        [],
+                        VoidType(),
+                        Block(
+                            [
+                                VarDecl(
+                                    'human',
+                                    Id('Human'),
+                                    StructLiteral(
+                                        'Human',
+                                        [
+                                            ('money', IntLiteral(100)),
+                                            ('is_dead', BooleanLiteral(False))
+                                        ]
+                                    )
+                                ),
+                                Return(None)
+                            ]
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 317))
 
 
-    def test_318(self):
+    def test_more_complex_struct_literal(self):
         input = \
         """
-        var a int = 1;
+        var dad Human = Human { money : 150, is_dead : true };
+        var mom Human = Human { money : 200, is_dead : true };
+        var son Human = Human { money : 0, is_dead : true };
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    VarDecl(
+                        'dad',
+                        Id('Human'),
+                        StructLiteral(
+                            'Human',
+                            [
+                                ('money', IntLiteral(150)),
+                                ('is_dead', BooleanLiteral(True))
+                            ]
+                        )
+                    ),
+                    VarDecl(
+                        'mom',
+                        Id('Human'),
+                        StructLiteral(
+                            'Human',
+                            [
+                                ('money', IntLiteral(200)),
+                                ('is_dead', BooleanLiteral(True))
+                            ]
+                        )
+                    ),
+                    VarDecl(
+                        'son',
+                        Id('Human'),
+                        StructLiteral(
+                            'Human',
+                            [
+                                ('money', IntLiteral(0)),
+                                ('is_dead', BooleanLiteral(True))
+                            ]
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 318))
 
-    def test_319(self):
+
+    def test_more_more_more_complex_struct_literal(self):
         input = \
         """
-        var a int = 1;
+        var dad Human = Human { money : 150, is_dead : true, son : Human { money : 0, is_dead : false }, wife : Human { money : 200, is_dead : true } };
+        const president = Human { money : 1000000, is_dead : true };
+        var baby Human = Human{};
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    VarDecl(
+                        'dad',
+                        Id('Human'),
+                        StructLiteral(
+                            'Human',
+                            [
+                                ('money', IntLiteral(150)),
+                                ('is_dead', BooleanLiteral(True)),
+                                ('son', StructLiteral(
+                                    'Human',
+                                    [
+                                        ('money', IntLiteral(0)),
+                                        ('is_dead', BooleanLiteral(False))
+                                    ]
+                                )),
+                                ('wife', StructLiteral(
+                                    'Human',
+                                    [
+                                        ('money', IntLiteral(200)),
+                                        ('is_dead', BooleanLiteral(True))
+                                    ]
+                                ))
+                            ]
+                        )
+                    ),
+                    ConstDecl(
+                        'president',
+                        None,
+                        StructLiteral(
+                            'Human',
+                            [
+                                ('money', IntLiteral(1000000)),
+                                ('is_dead', BooleanLiteral(True))
+                            ]
+                        )
+                    ),
+                    VarDecl(
+                        'baby',
+                        Id('Human'),
+                        StructLiteral(
+                            'Human',
+                            []
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 319))
 
-    def test_320(self):
+
+    '''
+    #==============================
+    AST: AST.ArrayCell
+    - arr : Expr
+    - idx : List[Expr]
+    AST: AST.FieldAccess
+    - receiver : Expr
+    - field : str
+    AST: AST.Id
+    - name : str
+    #==============================
+    '''
+    def test_array_cell_in_left_hand_side(self):
         input = \
         """
-        var a int = 1;
+        func main() {
+            var arr [3]int = [3]int{1, 2, 3};
+            arr[0] := arr[1] + arr[2];
+            return arr[0]
+        }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    FuncDecl(
+                        'main',
+                        [],
+                        VoidType(),
+                        Block(
+                            [
+                                VarDecl(
+                                    'arr',
+                                    ArrayType(
+                                        [
+                                            IntLiteral(3)
+                                        ],
+                                        IntType()
+                                    ),
+                                    ArrayLiteral(
+                                        [
+                                            IntLiteral(3)
+                                        ],
+                                        IntType(),
+                                        [
+                                            IntLiteral(1),
+                                            IntLiteral(2),
+                                            IntLiteral(3)
+                                        ]
+                                    )
+                                ),
+                                Assign(
+                                    ArrayCell(
+                                        Id('arr'),
+                                        [
+                                            IntLiteral(0)
+                                        ]
+                                    ),
+                                    BinaryOp(
+                                        '+',
+                                        ArrayCell(
+                                            Id('arr'),
+                                            [
+                                                IntLiteral(1)
+                                            ]
+                                        ),
+                                        ArrayCell(
+                                            Id('arr'),
+                                            [
+                                                IntLiteral(2)
+                                            ]
+                                        )
+                                    )
+                                ),
+                                Return(
+                                    ArrayCell(
+                                        Id('arr'),
+                                        [
+                                            IntLiteral(0)
+                                        ]
+                                    )
+                                )
+                            ]
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 320))
 
-    def test_321(self):
+
+    def test_array_cell_in_complex_multiple_array(self):
         input = \
         """
-        var a int = 1;
+        func main() {
+        a.some_function()[1][2][3].eat()[1] := arr[1][2][3][4][5] + arr[5][4][3][2][1];
+        }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    FuncDecl(
+                        'main',
+                        [],
+                        VoidType(),
+                        Block(
+                                [
+                                    Assign(
+                                        ArrayCell(
+                                            MethCall(
+                                                ArrayCell(
+                                                    MethCall(
+                                                        Id('a'),
+                                                        'some_function',
+                                                        []
+                                                    ),
+                                                    [
+                                                        IntLiteral(1),
+                                                        IntLiteral(2),
+                                                        IntLiteral(3)
+                                                    ]
+                                                ),
+                                                'eat',
+                                                []
+                                            ),
+                                            [
+                                                IntLiteral(1)
+                                            ]
+                                        ),
+                                        BinaryOp(
+                                            '+',
+                                            ArrayCell(
+                                                Id('arr'),
+                                                [
+                                                    IntLiteral(1),
+                                                    IntLiteral(2),
+                                                    IntLiteral(3),
+                                                    IntLiteral(4),
+                                                    IntLiteral(5)
+                                                ]
+                                            ),
+                                            ArrayCell(
+                                                Id('arr'),
+                                                [
+                                                    IntLiteral(5),
+                                                    IntLiteral(4),
+                                                    IntLiteral(3),
+                                                    IntLiteral(2),
+                                                    IntLiteral(1)
+                                                ]
+                                            )
+                                        )
+                                    )
+                        ]
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 321))
 
-    def test_322(self):
+
+    def test_more_complex_array_cell(self):
         input = \
         """
-        var a int = 1;
+        func something() [2]int {
+            var arr [2]int = [2]int{1, 2};
+            arr[1+1] := arr[arr[0]] + arr[arr[1]];
+        }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    FuncDecl(
+                        'something',
+                        [],
+                        ArrayType(
+                            [
+                                IntLiteral(2)
+                            ],
+                            IntType()
+                        ),
+                        Block(
+                            [
+                                VarDecl(
+                                    'arr',
+                                    ArrayType(
+                                        [
+                                            IntLiteral(2)
+                                        ],
+                                        IntType()
+                                    ),
+                                    ArrayLiteral(
+                                        [
+                                            IntLiteral(2)
+                                        ],
+                                        IntType(),
+                                        [
+                                            IntLiteral(1),
+                                            IntLiteral(2)
+                                        ]
+                                    )
+                                ),
+                                Assign(
+                                    ArrayCell(
+                                        Id('arr'),
+                                        [
+                                            BinaryOp(
+                                                '+',
+                                                IntLiteral(1),
+                                                IntLiteral(1)
+                                            )
+                                        ]
+                                    ),
+                                    BinaryOp(
+                                        '+',
+                                        ArrayCell(
+                                            Id('arr'),
+                                            [
+                                                ArrayCell(
+                                                    Id('arr'),
+                                                    [
+                                                        IntLiteral(0)
+                                                    ]
+                                                )
+                                            ]
+                                        ),
+                                        ArrayCell(
+                                            Id('arr'),
+                                            [
+                                                ArrayCell(
+                                                    Id('arr'),
+                                                    [
+                                                        IntLiteral(1)
+                                                    ]
+                                                )
+                                            ]
+                                        )
+                                    )
+                                )
+                            ]
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 322))
 
-    def test_323(self):
+
+    '''
+        SOS: This test case is ambiguous
+        There is an overlapping between expression and index_list
+        in the parser rule array_index -> expression greedily
+        eat the index of index_list
+    '''
+    def test_more_complex_array_cell_with_left_hand_side(self):
         input = \
         """
-        var a int = 1;
+        func array_cell() string {
+            a[1][2][3].e[1][2][3].c[1][2] := --1
+        }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    FuncDecl(
+                        'array_cell',
+                        [],
+                        StringType(),
+                        Block(
+                            [
+                                Assign(
+                                    ArrayCell(
+                                        FieldAccess(
+                                            ArrayCell(
+                                                FieldAccess(
+                                                    ArrayCell(
+                                                        Id('a'),
+                                                        [
+                                                            IntLiteral(1),
+                                                            IntLiteral(2),
+                                                            IntLiteral(3)
+                                                        ]
+                                                    ),
+                                                    'e'
+                                                ),
+                                                [
+                                                    IntLiteral(1),
+                                                    IntLiteral(2),
+                                                    IntLiteral(3)
+                                                ]
+                                            ),
+                                            'c'
+                                        ),
+                                        [
+                                            IntLiteral(1),
+                                            IntLiteral(2)
+                                        ]
+                                    ),
+                                    UnaryOp(
+                                        '-',
+                                        UnaryOp(
+                                            '-',
+                                            IntLiteral(1)
+                                        )
+                                    )
+                                )
+                            ]
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 323))
 
-    def test_324(self):
+
+    def test_array_cell_in_expression_only_without_left_hand_side(self):
         input = \
         """
-        var a int = 1;
+        const arr = arr[1][2][3][4][5].a.b.c[1][2][3][4][5];
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    ConstDecl(
+                        'arr',
+                        None,
+                        ArrayCell(
+                            FieldAccess(
+                                FieldAccess(
+                                    FieldAccess(
+                                        ArrayCell(
+                                            Id('arr'),
+                                            [
+                                                IntLiteral(1),
+                                                IntLiteral(2),
+                                                IntLiteral(3),
+                                                IntLiteral(4),
+                                                IntLiteral(5)
+                                            ]
+                                        ),
+                                        'a'
+                                    ),
+                                    'b'
+                                ),
+                                'c'
+                            ),
+                            [
+                                IntLiteral(1),
+                                IntLiteral(2),
+                                IntLiteral(3),
+                                IntLiteral(4),
+                                IntLiteral(5)
+                            ]
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 324))
 
-    def test_325(self):
+
+    def test_general_array_cell_in_both_left_and_right_hand_side(self):
         input = \
         """
-        var a int = 1;
+        func main() int {
+            a[1][2][3][4][5][6][7][8] := a[1][2][3][4][5][6][7][8] + 1;
+            a[1][2] += 3
+        }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    FuncDecl(
+                        'main',
+                        [],
+                        IntType(),
+                        Block(
+                            [
+                                Assign(
+                                    ArrayCell(
+                                        Id('a'),
+                                        [
+                                            IntLiteral(1),
+                                            IntLiteral(2),
+                                            IntLiteral(3),
+                                            IntLiteral(4),
+                                            IntLiteral(5),
+                                            IntLiteral(6),
+                                            IntLiteral(7),
+                                            IntLiteral(8)
+                                        ]
+                                    ),
+                                    BinaryOp(
+                                        '+',
+                                        ArrayCell(
+                                            Id('a'),
+                                            [
+                                                IntLiteral(1),
+                                                IntLiteral(2),
+                                                IntLiteral(3),
+                                                IntLiteral(4),
+                                                IntLiteral(5),
+                                                IntLiteral(6),
+                                                IntLiteral(7),
+                                                IntLiteral(8)
+                                            ]
+                                        ),
+                                        IntLiteral(1)
+                                    )
+                                ),
+                                Assign(
+                                    ArrayCell(
+                                        Id('a'),
+                                        [
+                                            IntLiteral(1),
+                                            IntLiteral(2)
+                                        ]
+                                    ),
+                                    BinaryOp(
+                                        '+',
+                                        ArrayCell(
+                                            Id('a'),
+                                            [
+                                                IntLiteral(1),
+                                                IntLiteral(2)
+                                            ]
+                                        ),
+                                        IntLiteral(3)
+                                    )
+                                )
+                            ]
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 325))
 
-    def test_326(self):
+
+    def test_all_cases_of_the_left_hand_side(self):
         input = \
         """
-        var a int = 1;
+        func main() {
+            dad.son[1].wife[2][2].baby.age := 1;
+            arr[1][2][3].a.b.c[1][2][3] := 4
+        }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    FuncDecl(
+                        'main',
+                        [],
+                        VoidType(),
+                        Block(
+                            [
+                                Assign(
+                                    FieldAccess(
+                                        FieldAccess(
+                                            ArrayCell(
+                                                FieldAccess(
+                                                    ArrayCell(
+                                                        FieldAccess(
+                                                            Id('dad'),
+                                                            'son'
+                                                        ),
+                                                        [
+                                                            IntLiteral(1)
+                                                        ]
+                                                    ),
+                                                    'wife'
+                                                ),
+                                                [
+                                                    IntLiteral(2),
+                                                    IntLiteral(2)
+                                                ]
+                                            ),
+                                            'baby'
+                                        ),
+                                        'age'
+                                    ),
+                                    IntLiteral(1)
+                                ),
+                                Assign(
+                                    ArrayCell(
+                                        FieldAccess(
+                                            FieldAccess(
+                                                FieldAccess(
+                                                    ArrayCell(
+                                                        Id('arr'),
+                                                        [
+                                                            IntLiteral(1),
+                                                            IntLiteral(2),
+                                                            IntLiteral(3)
+                                                        ]
+                                                    ),
+                                                    'a'
+                                                ),
+                                                'b'
+                                            ),
+                                            'c'
+                                        ),
+                                        [
+                                            IntLiteral(1),
+                                            IntLiteral(2),
+                                            IntLiteral(3)
+                                        ]
+                                    ),
+                                    IntLiteral(4)
+                                )
+                            ]
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 326))
+
 
     def test_327(self):
         input = \
@@ -1611,6 +2261,12 @@ class ASTGenSuite(unittest.TestCase):
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 379))
 
+
+    '''
+    #==============================
+    AST: Expression representation
+    #==============================
+    '''
     def test_380(self):
         input = \
         """
@@ -1835,6 +2491,7 @@ class ASTGenSuite(unittest.TestCase):
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 395))
 
+
     def test_396(self):
         input = \
         """
@@ -1849,7 +2506,8 @@ class ASTGenSuite(unittest.TestCase):
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 396))
 
-    def test_397(self):
+
+    def test_exp3(self):
         input = \
         """
         var a int = 1;
@@ -1863,7 +2521,8 @@ class ASTGenSuite(unittest.TestCase):
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 397))
 
-    def test_398(self):
+
+    def test_exp2(self):
         input = \
         """
         var a int = 1;
@@ -1877,7 +2536,8 @@ class ASTGenSuite(unittest.TestCase):
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 398))
 
-    def test_399(self):
+
+    def test_exp1(self):
         input = \
         """
         var a int = 1;
