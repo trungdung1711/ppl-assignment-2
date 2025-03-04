@@ -452,8 +452,9 @@ class ASTGeneration(MiniGoVisitor):
         return Assign(lhs=Id(name=ctx.ID().getText()), rhs=BinaryOp(op=self.visit(ctx.assignment_operator()), left=Id(name=ctx.ID().getText()), right=self.visit(ctx.expression())))
     
 
+    # 3/4/2025 -> creating VarDecl
     def visitInit_declaration(self, ctx:MiniGoParser.Init_declarationContext):
-        return Assign(lhs=Id(name=ctx.ID().getText()), rhs=self.visit(ctx.expression())) if ctx.type_part() else Assign(lhs=Id(name=ctx.ID().getText()), rhs=self.visit(ctx.expression()))
+        return VarDecl(varName=ctx.ID().getText(), varType=self.visit(ctx.type_part()), varInit=self.visit(ctx.expression())) if ctx.type_part() else VarDecl(varName=ctx.ID().getText(), varType=None, varInit=self.visit(ctx.expression()))
     
 
     '''

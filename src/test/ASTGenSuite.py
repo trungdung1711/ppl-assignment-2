@@ -339,7 +339,7 @@ class ASTGenSuite(unittest.TestCase):
          AST.StringType
     #==============================
     '''
-    def test_310(self):
+    def test_use_of_primitive_type(self):
         input = \
         """
         var a int = 9999;
@@ -367,7 +367,7 @@ class ASTGenSuite(unittest.TestCase):
     - eleType : Type
     #==============================
     '''
-    def test_311(self):
+    def test_array_type_along_with_array_literal(self):
         input = \
         """
         var a [3]int = [3]int{1, 2, 3};
@@ -401,60 +401,303 @@ class ASTGenSuite(unittest.TestCase):
         self.assertTrue(TestAST.checkASTGen(input, expect, 311))
 
 
-    def test_312(self):
+    def test_array_type_and_complex_array_literal(self):
         input = \
         """
-        var a int = 1;
+        var arr [3][4][5][CONST]float = [2][3]float{ {1.2, 2.2, 3.3} , {4.5, 5.6, 7.8} , 1.125 }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    VarDecl(
+                        'arr',
+                        ArrayType(
+                            [
+                                IntLiteral(3),
+                                IntLiteral(4),
+                                IntLiteral(5),
+                                Id('CONST')
+                            ],
+                            FloatType()
+                        ),
+                        ArrayLiteral(
+                            [
+                                IntLiteral(2),
+                                IntLiteral(3)
+                            ],
+                            FloatType(),
+                            [
+                                [
+                                    FloatLiteral(1.2),
+                                    FloatLiteral(2.2),
+                                    FloatLiteral(3.3)
+                                ],
+                                [
+                                    FloatLiteral(4.5),
+                                    FloatLiteral(5.6),
+                                    FloatLiteral(7.8)
+                                ],
+                                FloatLiteral(1.125)
+                            ]
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 312))
 
 
-    def test_313(self):
+    '''
+    #==============================
+    AST: AST.ArrayLiteral
+    - dimens : List[Expr]
+    - eleType : Type
+    - value : NestedList
+        - NestedList : PrimLit | List[NestedList]
+    #==============================
+    '''
+    def test_array_type_and_array_literal_with_a_more_complex_declaration(self):
         input = \
         """
-        var a int = 1;
+        var arr [0b01][0b10][0b11][0b100][0b101][ID]string = [2][2][2]int{ {{1, 2}, {3, 4}}, {{5, 6}, {7, 8}} }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    VarDecl(
+                        'arr',
+                        ArrayType(
+                            [
+                                IntLiteral(1),
+                                IntLiteral(2),
+                                IntLiteral(3),
+                                IntLiteral(4),
+                                IntLiteral(5),
+                                Id('ID')
+                            ],
+                            StringType()
+                        ),
+                        ArrayLiteral(
+                            [
+                                IntLiteral(2),
+                                IntLiteral(2),
+                                IntLiteral(2)
+                            ],
+                            IntType(),
+                            [
+                                [
+                                    [
+                                        IntLiteral(1),
+                                        IntLiteral(2)
+                                    ],
+                                    [
+                                        IntLiteral(3),
+                                        IntLiteral(4)
+                                    ]
+                                ],
+                                [
+                                    [
+                                        IntLiteral(5),
+                                        IntLiteral(6)
+                                    ],
+                                    [
+                                        IntLiteral(7),
+                                        IntLiteral(8)
+                                    ]
+                                ]
+                            ]
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 313))
 
 
-    def test_314(self):
+    def test_more_and_more_complex_array_type_and_array_literal(self):
         input = \
         """
-        var a int = 1;
+        func main() [3]string {
+            var arr [3]string = [3]string { "Hello", "World", "MiniGo", Human{name : "Dung", age : 18} } ;
+            return arr;
+        }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    FuncDecl(
+                        'main',
+                        [],
+                        ArrayType(
+                            [
+                                IntLiteral(3)
+                            ],
+                            StringType()
+                        ),
+                        Block(
+                            [
+                                VarDecl(
+                                    'arr',
+                                    ArrayType(
+                                        [
+                                            IntLiteral(3)
+                                        ],
+                                        StringType()
+                                    ),
+                                    ArrayLiteral(
+                                        [
+                                            IntLiteral(3)
+                                        ],
+                                        StringType(),
+                                        [
+                                            StringLiteral('"Hello"'),
+                                            StringLiteral('"World"'),
+                                            StringLiteral('"MiniGo"'),
+                                            StructLiteral(
+                                                'Human',
+                                                [
+                                                    ('name', StringLiteral('"Dung"')),
+                                                    ('age', IntLiteral(18))
+                                                ]
+                                            )
+                                        ]
+                                    )
+                                ),
+                                Return(
+                                    Id('arr')
+                                )
+                            ]
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 314))
 
 
-    def test_315(self):
+    def test_array_type_and_array_literal_all_literals_in_array_literal(self):
         input = \
         """
-        var a int = 1;
+        var a [10]Human = [10]int{ 0XFF, 1.125, "Hello World\\n", true, false, nil, Human{name : "Dung", ID : "2210573"}, {1,2,3} }
+        const a = [3]Human{ Human{name : "Le", ID : "2210572"}, Human{name : "Dung", ID : "2210573"}, Human{name : "Trung", ID : "2210574"} }
+        var arr [3][2][1 ]int = [3][2][1]int {{{1}, {2}}, {{3},{4}}, {{5},{6}}}
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    VarDecl(
+                        'a',
+                        ArrayType(
+                            [
+                                IntLiteral(10)
+                            ],
+                            Id('Human')
+                        ),
+                        ArrayLiteral(
+                            [
+                                IntLiteral(10)
+                            ],
+                            IntType(),
+                            [
+                                IntLiteral(255),
+                                FloatLiteral(1.125),
+                                StringLiteral('"Hello World\\n"'),
+                                BooleanLiteral(True),
+                                BooleanLiteral(False),
+                                NilLiteral(),
+                                StructLiteral(
+                                    'Human',
+                                    [
+                                        ('name', StringLiteral('"Dung"')),
+                                        ('ID', StringLiteral('"2210573"'))
+                                    ]
+                                ),
+                                [
+                                    IntLiteral(1),
+                                    IntLiteral(2),
+                                    IntLiteral(3)
+                                ]
+                            ]
+                        )
+                    ),
+                    ConstDecl(
+                        'a',
+                        None,
+                        ArrayLiteral(
+                            [
+                                IntLiteral(3)
+                            ],
+                            Id('Human'),
+                            [
+                                StructLiteral(
+                                    'Human',
+                                    [
+                                        ('name', StringLiteral('"Le"')),
+                                        ('ID', StringLiteral('"2210572"'))
+                                    ]
+                                ),
+                                StructLiteral(
+                                    'Human',
+                                    [
+                                        ('name', StringLiteral('"Dung"')),
+                                        ('ID', StringLiteral('"2210573"'))
+                                    ]
+                                ),
+                                StructLiteral(
+                                    'Human',
+                                    [
+                                        ('name', StringLiteral('"Trung"')),
+                                        ('ID', StringLiteral('"2210574"'))
+                                    ]
+                                )
+                            ]
+                        )
+                    ),
+                    VarDecl(
+                        'arr',
+                        ArrayType(
+                            [
+                                IntLiteral(3),
+                                IntLiteral(2),
+                                IntLiteral(1)
+                            ],
+                            IntType()
+                        ),
+                        ArrayLiteral(
+                            [
+                                IntLiteral(3),
+                                IntLiteral(2),
+                                IntLiteral(1)
+                            ],
+                            IntType(),
+                            [
+                                [
+                                    [
+                                        IntLiteral(1)
+                                    ],
+                                    [
+                                        IntLiteral(2)
+                                    ]
+                                ],
+                                [
+                                    [
+                                        IntLiteral(3)
+                                    ],
+                                    [
+                                        IntLiteral(4)
+                                    ]
+                                ],
+                                [
+                                    [
+                                        IntLiteral(5)
+                                    ],
+                                    [
+                                        IntLiteral(6)
+                                    ]
+                                ]
+                            ]
+                        )
+                    )
                 ]
             )
         )

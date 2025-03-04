@@ -851,6 +851,9 @@ statement           : variable_declaration  // O    O
                 // NOTE
                 // 2/27/2025 may convert it into Assign with lhs ID and rhs Expr
                 // MAP
+                // 3/4/2025 -> change it to VarDecl
+                // the specification clearly states variable declaration with initialization
+                // -> grammar rule
                 init_declaration        : VAR ID type_part EQUAL expression
                                         | VAR ID           EQUAL expression
                                         ;

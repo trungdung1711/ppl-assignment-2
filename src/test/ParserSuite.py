@@ -24,3 +24,12 @@ class ParserSuite(unittest.TestCase):
         """
         expect = "successful"
         self.assertTrue(TestParser.checkParser(input,expect,201))
+
+
+    def test_correct_2(self):
+        input = \
+        """
+        var arr [3][4][5][CONST]float = [2][3]float{ {1.2, 2.2, 3.3} , {4.5, 5.6, 7.8} , 1.125 }
+        """
+        expect = "successful"
+        self.assertTrue(TestParser.checkParser(input,expect,202))
