@@ -12,7 +12,10 @@ class ASTGeneration(MiniGoVisitor):
     #==============================
     '''
     def visitInteger_literal(self, ctx:MiniGoParser.Integer_literalContext):
-
+        '''
+            SOS: should we convert it from str to int
+            or let it as it is
+        '''
         if ctx.DECIMAL_INTEGER():
             text = ctx.DECIMAL_INTEGER().getText()
             base = 10
@@ -194,7 +197,7 @@ class ASTGeneration(MiniGoVisitor):
     def visitArray_index(self, ctx:MiniGoParser.Array_indexContext):
         # return ArrayCell(arr=self.visit(ctx.expression()), idx=self.visit(ctx.index_list()))
         '''
-            Attempt to fix the bug of ArrayCell
+            - Attempt to fix the bug of ArrayCell
         '''
         # result should be an ArrayCell
         expression = self.visit(ctx.expression())
@@ -394,6 +397,10 @@ class ASTGeneration(MiniGoVisitor):
     #==============================
     '''
     def visitAssignment_statement(self, ctx:MiniGoParser.Assignment_statementContext):
+        '''
+            - The two self.visit(ctx.lhs()) are the same but
+            diffirent objects
+        '''
         if self.visit(ctx.assignment_operator()) is None:
             return Assign(lhs=self.visit(ctx.lhs()), rhs=self.visit(ctx.expression()))
         return Assign(lhs=self.visit(ctx.lhs()), rhs=BinaryOp(op=self.visit(ctx.assignment_operator()), left=self.visit(ctx.lhs()), right=self.visit(ctx.expression())))
@@ -568,7 +575,18 @@ class ASTGeneration(MiniGoVisitor):
             return Id(ctx.ID().getText())
     
 
+    '''
+    #==============================
+    AST: AST.FloatLiteral
+    - value : float
+    AST: AST.StringLiteral
+    - value : str
+    #==============================
+    '''
     def visitLiteral(self, ctx:MiniGoParser.LiteralContext):
+        '''
+            SOS: Convert text to the value or not
+        '''
         if ctx.integer_literal():
             return self.visit(ctx.integer_literal())
         elif ctx.FLOATING_POINT():

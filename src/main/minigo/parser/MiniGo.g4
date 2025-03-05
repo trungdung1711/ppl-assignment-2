@@ -771,6 +771,8 @@ statement           : variable_declaration  // O    O
             // expression will catch all and only left one for the
             // left hand side
             // problem with lhs and expression
+            // SOS, expression will eat the index_list ->
+            // only left one
             array_index             : expression index_list
                                     ;
                 // MAP
