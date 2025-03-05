@@ -1,4 +1,4 @@
-# /bin/bash
+# /bin/zsh
 toilet --metal -t --font mono12  "gen"
 python run.py gen
 

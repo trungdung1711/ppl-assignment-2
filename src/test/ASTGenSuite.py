@@ -3159,152 +3159,640 @@ class ASTGenSuite(unittest.TestCase):
         self.assertTrue(TestAST.checkASTGen(input, expect, 350))
 
 
-    def test_351(self):
+    '''
+    #==============================
+    AST: AST.InterfaceType
+    - name : str
+    - methods : List[Prototype]
+    #==============================
+    '''
+    '''
+    #==============================
+    AST: AST.Prototype
+    - name : str
+    - params : List[Type]
+    - retType : Type
+    #==============================
+    '''
+    def test_simple_interface_declaration_but_in_this_weird_ast_this_will_result_in_InterfaceType_not_GenDecl_in_real_go(self):
         input = \
         """
-        var a int = 1;
+        type Animal interface {
+            eat();
+            walk();
+            sleep();
+            attack() int;
+        }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    InterfaceType(
+                        'Animal',
+                        [
+                            Prototype(
+                                'eat',
+                                [],
+                                VoidType()
+                            ),
+                            Prototype(
+                                'walk',
+                                [],
+                                VoidType()
+                            ),
+                            Prototype(
+                                'sleep',
+                                [],
+                                VoidType()
+                            ),
+                            Prototype(
+                                'attack',
+                                [],
+                                IntType()
+                            )
+                        ]
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 351))
 
 
-    def test_352(self):
+    def test_complex_prototype_in_interface_declaration(self):
         input = \
         """
-        var a int = 1;
+        type Animal interface {
+            eat(food [10]Food) float;
+            attack(animal Animal) float;
+            is_dead() boolean;
+        }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    InterfaceType(
+                        'Animal',
+                        [
+                            Prototype(
+                                'eat',
+                                [
+                                    ArrayType(
+                                        [
+                                            IntLiteral(10)
+                                        ],
+                                        Id('Food')
+                                    )
+                                ],
+                                FloatType()
+                            ),
+                            Prototype(
+                                'attack',
+                                [
+                                    Id('Animal')
+                                ],
+                                FloatType()
+                            ),
+                            Prototype(
+                                'is_dead',
+                                [
+
+                                ],
+                                BoolType()
+                            )
+                        ]
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 352))
 
 
-    def test_353(self):
+    def test_more_complex_prototype_with_multiple_parameters(self):
         input = \
         """
-        var a int = 1;
+        type Animal interface {
+            do_math(a,b,c,d,e int, m,n,p,q float, u, t, v [5]boolean, a, b, c, d Animal)
+        }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    InterfaceType(
+                        'Animal',
+                        [
+                            Prototype(
+                                'do_math',
+                                [
+                                    IntType(),
+                                    IntType(),
+                                    IntType(),
+                                    IntType(),
+                                    IntType(),
+                                    FloatType(),
+                                    FloatType(),
+                                    FloatType(),
+                                    FloatType(),
+                                    ArrayType(
+                                        [IntLiteral(5)],
+                                        BoolType()
+                                    ),
+                                    ArrayType(
+                                        [IntLiteral(5)],
+                                        BoolType()
+                                    ),
+                                    ArrayType(
+                                        [IntLiteral(5)],
+                                        BoolType()
+                                    ),
+                                    Id('Animal'),
+                                    Id('Animal'),
+                                    Id('Animal'),
+                                    Id('Animal'),
+                                ],
+                                VoidType()
+                            )
+                        ]
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 353))
 
 
-    def test_354(self):
+    def test_more_interface_types_with_complex_prototype(self):
         input = \
         """
-        var a int = 1;
+        type Animal interface {
+            get_volume(a int, b float, c Animal, d boolean, e string, m, n, p Animal) 
+        }
+
+        type Planet interface {
+            is_destroyed(p int, m,n,p float, a, b, c string, e, f, g, h [1][2][3]boolean) float
+        }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    InterfaceType(
+                        'Animal',
+                        [
+                            Prototype(
+                                'get_volume',
+                                [
+                                    IntType(),
+                                    FloatType(),
+                                    Id('Animal'),
+                                    BoolType(),
+                                    StringType(),
+                                    Id('Animal'),
+                                    Id('Animal'),
+                                    Id('Animal'),
+                                ],
+                                VoidType()
+                            )
+                        ]
+                    ),
+                    InterfaceType(
+                        'Planet',
+                        [
+                            Prototype(
+                                'is_destroyed',
+                                [
+                                    IntType(),
+                                    FloatType(),
+                                    FloatType(),
+                                    FloatType(),
+                                    StringType(),
+                                    StringType(),
+                                    StringType(),
+                                    ArrayType(
+                                        [
+                                            IntLiteral(1),
+                                            IntLiteral(2),
+                                            IntLiteral(3)
+                                        ],
+                                        BoolType()
+                                    ),
+                                    ArrayType(
+                                        [
+                                            IntLiteral(1),
+                                            IntLiteral(2),
+                                            IntLiteral(3)
+                                        ],
+                                        BoolType()
+                                    ),
+                                    ArrayType(
+                                        [
+                                            IntLiteral(1),
+                                            IntLiteral(2),
+                                            IntLiteral(3)
+                                        ],
+                                        BoolType()
+                                    ),
+                                    ArrayType(
+                                        [
+                                            IntLiteral(1),
+                                            IntLiteral(2),
+                                            IntLiteral(3)
+                                        ],
+                                        BoolType()
+                                    )
+                                ],
+                                FloatType()
+                            )
+                        ]
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 354))
 
 
-    def test_355(self):
+    def test_prototype_weird(self):
         input = \
         """
-        var a int = 1;
+        type Animal interface {
+            cal(a,b,c,d,e,f,g,h,i [4][5][6]Animal) [4][5][6]Animal
+        }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    InterfaceType(
+                        'Animal',
+                        [
+                            Prototype(
+                                'cal',
+                                [
+                                    ArrayType(
+                                        [
+                                            IntLiteral(4),
+                                            IntLiteral(5),
+                                            IntLiteral(6)
+                                        ],
+                                        Id('Animal')
+                                    ),
+                                    ArrayType(
+                                        [
+                                            IntLiteral(4),
+                                            IntLiteral(5),
+                                            IntLiteral(6)
+                                        ],
+                                        Id('Animal')
+                                    ),
+                                    ArrayType(
+                                        [
+                                            IntLiteral(4),
+                                            IntLiteral(5),
+                                            IntLiteral(6)
+                                        ],
+                                        Id('Animal')
+                                    ),
+                                    ArrayType(
+                                        [
+                                            IntLiteral(4),
+                                            IntLiteral(5),
+                                            IntLiteral(6)
+                                        ],
+                                        Id('Animal')
+                                    ),
+                                    ArrayType(
+                                        [
+                                            IntLiteral(4),
+                                            IntLiteral(5),
+                                            IntLiteral(6)
+                                        ],
+                                        Id('Animal')
+                                    ),
+                                    ArrayType(
+                                        [
+                                            IntLiteral(4),
+                                            IntLiteral(5),
+                                            IntLiteral(6)
+                                        ],
+                                        Id('Animal')
+                                    ),
+                                    ArrayType(
+                                        [
+                                            IntLiteral(4),
+                                            IntLiteral(5),
+                                            IntLiteral(6)
+                                        ],
+                                        Id('Animal')
+                                    ),
+                                    ArrayType(
+                                        [
+                                            IntLiteral(4),
+                                            IntLiteral(5),
+                                            IntLiteral(6)
+                                        ],
+                                        Id('Animal')
+                                    ),
+                                    ArrayType(
+                                        [
+                                            IntLiteral(4),
+                                            IntLiteral(5),
+                                            IntLiteral(6)
+                                        ],
+                                        Id('Animal')
+                                    )
+                                ],
+                                ArrayType(
+                                    [
+                                        IntLiteral(4),
+                                        IntLiteral(5),
+                                        IntLiteral(6)
+                                    ],
+                                    Id('Animal')
+                                )
+                            )
+                        ]
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 355))
 
 
-    def test_356(self):
+    '''
+    #==============================
+    AST: AST.FuncDecl
+    - name : str
+    - params : List[ParamDecl]
+    - retType : Type
+    - block : Block
+    #==============================
+    '''
+    '''
+    #==============================
+    AST: AST.ParamDecl
+    - parName : str
+    - parType : Type
+    #==============================
+    '''
+    def test_basic_function_declaration(self):
         input = \
         """
-        var a int = 1;
+            func print(test string) {
+                print(test)
+            }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    FuncDecl(
+                        'print',
+                        [
+                            ParamDecl('test', StringType())
+                        ],
+                        VoidType(),
+                        Block(
+                            [
+                                FuncCall(
+                                    'print',
+                                    [
+                                        Id('test')
+                                    ]
+                                )
+                            ]
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 356))
 
 
-    def test_357(self):
+    def test_intermediate_function_declaration(self):
         input = \
         """
-        var a int = 1;
+            func div (a int, b int) float {
+                if (b == 0) {
+                    return -1
+                }
+                return a / b
+            }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    FuncDecl(
+                        'div',
+                        [
+                            ParamDecl('a', IntType()),
+                            ParamDecl('b', IntType())
+                        ],
+                        FloatType(),
+                        Block(
+                            [
+                                If(
+                                    BinaryOp(
+                                        '==',
+                                        Id('b'),
+                                        IntLiteral(0)
+                                    ),
+                                    Block(
+                                        [
+                                            Return(
+                                                UnaryOp(
+                                                    '-',
+                                                    IntLiteral(1)
+                                                )
+                                            )
+                                        ]
+                                    ),
+                                    None
+                                ),
+                                Return(
+                                    BinaryOp(
+                                        '/',
+                                        Id('a'),
+                                        Id('b')
+                                    )
+                                )
+                            ]
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 357))
 
 
-    def test_358(self):
+    def test_more_complex_function_declaration_with_many_parameters(self):
         input = \
         """
-        var a int = 1;
+            func create_planet(p Planet, s Sand, w Water, l Light, h [100]Human, a,b,c,d,e Seed) Planet{
+                return ((((1-2))))*2
+            }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    FuncDecl(
+                        'create_planet',
+                        [
+                            ParamDecl('p', Id('Planet')),
+                            ParamDecl('s', Id('Sand')),
+                            ParamDecl('w', Id('Water')),
+                            ParamDecl('l', Id('Light')),
+                            ParamDecl('h', ArrayType(
+                                [
+                                    IntLiteral(100)
+                                ],
+                                Id('Human')
+                            )),
+                            ParamDecl('a', Id('Seed')),
+                            ParamDecl('b', Id('Seed')),
+                            ParamDecl('c', Id('Seed')),
+                            ParamDecl('d', Id('Seed')),
+                            ParamDecl('e', Id('Seed')),
+                        ],
+                        Id('Planet'),
+                        Block(
+                            [
+                                Return(
+                                    BinaryOp(
+                                        '*',
+                                        BinaryOp(
+                                            '-',
+                                            IntLiteral(1),
+                                            IntLiteral(2)
+                                        ),
+                                        IntLiteral(2)
+                                    )
+                                )
+                            ]
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 358))
 
-    def test_359(self):
+
+    def test_more_more_function_declaration_with_for_basic(self):
         input = \
         """
-        var a int = 1;
+            func loop(i,n int, a string) {
+                for i < n {
+                    print(i)
+                    print(s)
+                }
+            }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    FuncDecl(
+                        'loop',
+                        [
+                            ParamDecl('i', IntType()),
+                            ParamDecl('n', IntType()),
+                            ParamDecl('a', StringType())
+                        ],
+                        VoidType(),
+                        Block(
+                            [
+                                ForBasic(
+                                    BinaryOp(
+                                        '<',
+                                        Id('i'),
+                                        Id('n')
+                                    ),
+                                    Block(
+                                        [
+                                            FuncCall(
+                                                'print',
+                                                [
+                                                    Id('i')
+                                                ]
+                                            ),
+                                            FuncCall(
+                                                'print',
+                                                [
+                                                    Id('s')
+                                                ]
+                                            )
+                                        ]
+                                    )
+                                )
+                            ]
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 359))
 
-    def test_360(self):
+
+    def test_function_declaration_for_step(self):
         input = \
         """
-        var a int = 1;
+            func loop (a,b,c,d,e int, m,n,p float) int{
+                for i:=0;i<100;i+=1 {
+                    util.print(i)
+                }
+                return;
+            }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    FuncDecl(
+                        'loop',
+                        [
+                            ParamDecl('a', IntType()),
+                            ParamDecl('b', IntType()),
+                            ParamDecl('c', IntType()),
+                            ParamDecl('d', IntType()),
+                            ParamDecl('e', IntType()),
+                            ParamDecl('m', FloatType()),
+                            ParamDecl('n', FloatType()),
+                            ParamDecl('p', FloatType())
+                        ],
+                        IntType(),
+                        Block(
+                            [
+                                ForStep(
+                                    Assign(
+                                        Id('i'),
+                                        IntLiteral(0)
+                                    ),
+                                    BinaryOp(
+                                        '<',
+                                        Id('i'),
+                                        IntLiteral(100)
+                                    ),
+                                    Assign(
+                                        Id('i'),
+                                        BinaryOp(
+                                            '+',
+                                            Id('i'),
+                                            IntLiteral(1)
+                                        )
+                                    ),
+                                    Block(
+                                        [
+                                            MethCall(
+                                                Id('util'),
+                                                'print',
+                                                [
+                                                    Id('i')
+                                                ]
+                                            )
+                                        ]
+                                    )
+                                ),
+                                Return(None)
+                            ]
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 360))
+
 
     def test_361(self):
         input = \
