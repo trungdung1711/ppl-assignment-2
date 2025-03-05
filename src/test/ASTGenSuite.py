@@ -3794,76 +3794,309 @@ class ASTGenSuite(unittest.TestCase):
         self.assertTrue(TestAST.checkASTGen(input, expect, 360))
 
 
-    def test_361(self):
+    '''
+    #==============================
+    AST: AST.MethodDecl
+    - receiver : str
+    - recType : Type
+    - fun : FuncDecl
+    #==============================
+    '''
+    def test_simple_method_declaration_in_real_go_it_is_the_same_as_func_declaration(self):
         input = \
         """
-        var a int = 1;
+        func (d Dog) bark() {
+            print("Mew")
+        } 
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    MethodDecl(
+                        'd',
+                        Id('Dog'),
+                        FuncDecl(
+                            'bark',
+                            [],
+                            VoidType(),
+                            Block(
+                                [
+                                    FuncCall(
+                                        'print',
+                                        [
+                                            StringLiteral('"Mew"')
+                                        ]
+                                    )
+                                ]
+                            )
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 361))
 
-    def test_362(self):
+
+    def test_method_declaration_with_for_init_var_decl(self):
         input = \
         """
-        var a int = 1;
+            func (c Cat) attack(sides [10]int) int {
+                for var i int = 0; i < 10; i +=1 {
+                    c.attack(i*1.5)
+                }
+            }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    MethodDecl(
+                        'c',
+                        Id('Cat'),
+                        FuncDecl(
+                            'attack',
+                            [
+                                ParamDecl('sides', ArrayType(
+                                    [
+                                        IntLiteral(10)
+                                    ],
+                                    IntType()
+                                ))
+                            ],
+                            IntType(),
+                            Block(
+                                [
+                                    ForStep(
+                                        VarDecl(
+                                            'i',
+                                            IntType(),
+                                            IntLiteral(0)
+                                        ),
+                                        BinaryOp(
+                                            '<',
+                                            Id('i'),
+                                            IntLiteral(10)
+                                        ),
+                                        Assign(
+                                            Id('i'),
+                                            BinaryOp(
+                                                '+',
+                                                Id('i'),
+                                                IntLiteral(1)
+                                            )
+                                        ),
+                                        Block(
+                                            [
+                                                MethCall(
+                                                    Id('c'),
+                                                    'attack',
+                                                    [
+                                                        BinaryOp(
+                                                            '*',
+                                                            Id('i'),
+                                                            FloatLiteral(1.5)
+                                                        )
+                                                    ]
+                                                )
+                                            ]
+                                        )
+                                    )
+                                ]
+                            )
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 362))
 
-    def test_363(self):
+
+    def test_more_complex_method_declarations_with_variable_declaration(self):
         input = \
         """
-        var a int = 1;
+            func (b Bird) lay_eggs(e [10]Egg, num int) int {
+                var i = 100;
+                const NUM = 100;
+                e[1][2][3] := 100
+                return -100;
+            }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    MethodDecl(
+                        'b',
+                        Id('Bird'),
+                        FuncDecl(
+                            'lay_eggs',
+                            [
+                                ParamDecl('e', ArrayType(
+                                    [
+                                        IntLiteral(10)
+                                    ],
+                                    Id('Egg')
+                                )),
+                                ParamDecl('num', IntType())
+                            ],
+                            IntType(),
+                            Block(
+                                [
+                                    VarDecl(
+                                        'i',
+                                        None,
+                                        IntLiteral(100)
+                                    ),
+                                    ConstDecl(
+                                        'NUM',
+                                        None,
+                                        IntLiteral(100)
+                                    ),
+                                    Assign(
+                                        ArrayCell(
+                                            Id('e'),
+                                            [
+                                                IntLiteral(1),
+                                                IntLiteral(2),
+                                                IntLiteral(3)
+                                            ]
+                                        ),
+                                        IntLiteral(100)
+                                    ),
+                                    Return(
+                                        UnaryOp(
+                                            '-',
+                                            IntLiteral(100)
+                                        )
+                                    )
+                                ]
+                            )
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 363))
 
-    def test_364(self):
+
+    def test_more_more_complex_method_declaration_if_else_chain(self):
         input = \
         """
-        var a int = 1;
+            func (w Weapon) shoot(target Target) {
+                if (target.in_range()) {
+                    w.shoot();
+                } else {
+                    return;
+                }
+            }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    MethodDecl(
+                        'w',
+                        Id('Weapon'),
+                        FuncDecl(
+                            'shoot',
+                            [
+                                ParamDecl('target', Id('Target'))
+                            ],
+                            VoidType(),
+                            Block(
+                                [
+                                    If(
+                                        MethCall(
+                                            Id('target'),
+                                            'in_range',
+                                            []
+                                        ),
+                                        Block(
+                                            [
+                                                MethCall(
+                                                    Id('w'),
+                                                    'shoot',
+                                                    []
+                                                )
+                                            ]
+                                        ),
+                                        Block(
+                                            [
+                                                Return(None)
+                                            ]
+                                        )
+                                    )
+                                ]
+                            )
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 364))
 
-    def test_365(self):
+
+    def test_more_more_more_complex_method_declaration_for_each(self):
         input = \
         """
-        var a int = 1;
+            func (w Witch) use_magic(s Spell, mana int, targets [10]Target) int{
+                for index, target := range targets {
+                    w.cast(s, target)
+                }
+            }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    MethodDecl(
+                        'w',
+                        Id('Witch'),
+                        FuncDecl(
+                            'use_magic',
+                            [
+                                ParamDecl('s', Id('Spell')),
+                                ParamDecl('mana', IntType()),
+                                ParamDecl('targets', ArrayType(
+                                    [
+                                        IntLiteral(10)
+                                    ],
+                                    Id('Target')
+                                ))
+                            ],
+                            IntType(),
+                            Block(
+                                [
+                                    ForEach(
+                                        Id('index'),
+                                        Id('target'),
+                                        Id('targets'),
+                                        Block(
+                                            [
+                                                MethCall(
+                                                    Id('w'),
+                                                    'cast',
+                                                    [
+                                                        Id('s'),
+                                                        Id('target')
+                                                    ]
+                                                )
+                                            ]
+                                        )
+                                    )
+                                ]
+                            )
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 365))
 
+
+    '''
+    #==============================
+    AST: AST.Assign
+    - lhs : LHS
+    - rhs : Expr
+    #==============================
+    '''
     def test_366(self):
         input = \
         """
@@ -3934,6 +4167,31 @@ class ASTGenSuite(unittest.TestCase):
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 370))
 
+    '''
+    #==============================
+    AST: AST.ForBasic
+    - cond : Expr
+    - loop : Block
+    #==============================
+    '''
+    '''
+    #==============================
+    AST: AST.ForStep
+    - init : Stmt
+    - cond : Expr
+    - upda : Assign
+    - loop : Block
+    #==============================
+    '''
+    '''
+    #==============================
+    AST: AST.ForEach
+    - idx : Id
+    - value : Id
+    - arr : Expr
+    - loop : Block
+    #==============================
+    '''
     def test_371(self):
         input = \
         """
