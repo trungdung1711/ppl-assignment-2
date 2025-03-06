@@ -5617,146 +5617,188 @@ class ASTGenSuite(unittest.TestCase):
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 389))
 
-    def test_390(self):
-        input = \
-        """
-        var a int = 1;
-        """
-        expect = str(
-            Program(
-                [
-                    VarDecl('a', IntType(), IntLiteral(1))
-                ]
-            )
-        )
+
+    def test_stolen_test_case10(self):
+        input = """
+        func foo () {
+            for var a = 1; a < 10; a := 1 {return;}
+            for a += 1; a < 10; a -= 1 {return;}
+        }
+"""
+        expect = str(Program([FuncDecl("foo",[],VoidType(),Block([ForStep(VarDecl("a", None,IntLiteral(1)),BinaryOp("<", Id("a"), IntLiteral(10)),Assign(Id("a"),IntLiteral(1)),Block([Return(None)])),ForStep(Assign(Id("a"),BinaryOp("+", Id("a"), IntLiteral(1))),BinaryOp("<", Id("a"), IntLiteral(10)),Assign(Id("a"),BinaryOp("-", Id("a"), IntLiteral(1))),Block([Return(None)]))]))]))
         self.assertTrue(TestAST.checkASTGen(input, expect, 390))
 
-    def test_391(self):
-        input = \
-        """
-        var a int = 1;
-        """
-        expect = str(
-            Program(
-                [
-                    VarDecl('a', IntType(), IntLiteral(1))
-                ]
-            )
-        )
+
+    def test_stolen_test_case9(self):
+        input = """
+        func foo () {
+            a[1*2][1+2] := a[1*2][1+2];
+            a[1+2] := a[1+2];
+        }
+"""
+        expect = str(Program([FuncDecl("foo",[],VoidType(),Block([
+            Assign(ArrayCell(Id("a"),[BinaryOp("*", IntLiteral(1), IntLiteral(2)),BinaryOp("+", IntLiteral(1), IntLiteral(2))]),ArrayCell(Id("a"),[BinaryOp("*", IntLiteral(1), IntLiteral(2)),BinaryOp("+", IntLiteral(1), IntLiteral(2))])),
+            Assign(ArrayCell(Id("a"),[BinaryOp("+", IntLiteral(1), IntLiteral(2))]),ArrayCell(Id("a"),[BinaryOp("+", IntLiteral(1), IntLiteral(2))]))]))
+		]))
         self.assertTrue(TestAST.checkASTGen(input, expect, 391))
 
-    def test_392(self):
-        input = \
-        """
-        var a int = 1;
-        """
-        expect = str(
-            Program(
-                [
-                    VarDecl('a', IntType(), IntLiteral(1))
-                ]
-            )
-        )
+
+    def test_stolen_test_case8(self):
+        input = """
+            func foo(){
+                a["s"][foo()] := a[2][2][3];
+                a[2] := a[3][4];
+                b.c.a[2] := b.c.a[2];
+                b.c.a[2][3] := b.c.a[2][3];
+            } 
+"""
+        expect = str(Program([FuncDecl("foo",[],VoidType(),Block([
+            Assign(ArrayCell(Id("a"),[StringLiteral("\"s\""),FuncCall("foo",[])]),ArrayCell(Id("a"),[IntLiteral(2),IntLiteral(2),IntLiteral(3)])),
+            Assign(ArrayCell(Id("a"),[IntLiteral(2)]),ArrayCell(Id("a"),[IntLiteral(3),IntLiteral(4)])),
+            Assign(ArrayCell(FieldAccess(FieldAccess(Id("b"),"c"),"a"),[IntLiteral(2)]),ArrayCell(FieldAccess(FieldAccess(Id("b"),"c"),"a"),[IntLiteral(2)])),
+            Assign(ArrayCell(FieldAccess(FieldAccess(Id("b"),"c"),"a"),[IntLiteral(2),IntLiteral(3)]),ArrayCell(FieldAccess(FieldAccess(Id("b"),"c"),"a"),[IntLiteral(2),IntLiteral(3)]))]))
+		]))
         self.assertTrue(TestAST.checkASTGen(input, expect, 392))
 
-    def test_393(self):
-        input = \
-        """
-        var a int = 1;
-        """
-        expect = str(
-            Program(
-                [
-                    VarDecl('a', IntType(), IntLiteral(1))
-                ]
-            )
-        )
+
+    def test_stolen_test_case7(self):
+        input = """
+    func foo () {
+        a();
+        a(1, 2);
+        a(1);
+        b.a.a();
+        b.a.a(1, 2);
+        b.a.a(1);
+    }
+"""
+        expect = str(Program([FuncDecl("foo",[],VoidType(),Block([
+            FuncCall("a",[]),
+            FuncCall("a",[IntLiteral(1),IntLiteral(2)]),
+            FuncCall("a",[IntLiteral(1)]),
+            MethCall(FieldAccess(Id("b"),"a"),"a",[]),
+            MethCall(FieldAccess(Id("b"),"a"),"a",[IntLiteral(1),IntLiteral(2)]),
+            MethCall(FieldAccess(Id("b"),"a"),"a",[IntLiteral(1)])]))
+		]))
         self.assertTrue(TestAST.checkASTGen(input, expect, 393))
 
-    def test_394(self):
-        input = \
-        """
-        var a int = 1;
-        """
-        expect = str(
-            Program(
-                [
-                    VarDecl('a', IntType(), IntLiteral(1))
-                ]
-            )
-        )
+
+    def test_stolen_test_case6(self):
+        input = """
+        type INTERFACE interface {
+            foo();
+            foo() int;
+            foo() [2]ID;
+            foo(a int);
+            foo(a int, b int);
+            foo(a, b int);
+        }
+"""
+        expect = str(Program([InterfaceType("INTERFACE",[
+            Prototype("foo",[],VoidType()),Prototype("foo",[],IntType()),
+            Prototype("foo",[],ArrayType([IntLiteral(2)],Id("ID"))),
+            Prototype("foo",[IntType()],VoidType()),
+            Prototype("foo",[IntType(),IntType()],VoidType()),
+            Prototype("foo",[IntType(),IntType()],VoidType())])
+		]))
         self.assertTrue(TestAST.checkASTGen(input, expect, 394))
 
-    def test_395(self):
-        input = \
-        """
-        var a int = 1;
-        """
-        expect = str(
-            Program(
-                [
-                    VarDecl('a', IntType(), IntLiteral(1))
-                ]
-            )
-        )
+
+    def test_stolen_test_case5(self):
+        input = """
+            func votien() {
+                return [2] ID { {1}, {"2"}, {nil}, {struc{}} };
+                return "THANKS YOU, PPL1 ";
+            };
+"""
+        expect = str(Program([FuncDecl("votien",[],VoidType(),Block([Return(ArrayLiteral([IntLiteral(2)],Id("ID"),[[IntLiteral(1)],[StringLiteral("\"2\"")],[NilLiteral()],[StructLiteral("struc",[])]])),Return(StringLiteral("\"THANKS YOU, PPL1 \""))]))
+		]))
         self.assertTrue(TestAST.checkASTGen(input, expect, 395))
 
 
-    def test_396(self):
-        input = \
-        """
-        var a int = 1;
-        """
-        expect = str(
-            Program(
-                [
-                    VarDecl('a', IntType(), IntLiteral(1))
-                ]
-            )
-        )
+    def test_stolen_test_case4(self):
+        input ="""
+            func foo(){
+                a["s"][foo()] := a[2][2][3];
+                a[2] := a[3][4];
+                b.c.a[2] := b.c.a[2];
+                b.c.a[2][3] := b.c.a[2][3];
+            } 
+"""
+        expect = str(Program([FuncDecl("foo",[],VoidType(),Block([
+            Assign(ArrayCell(Id("a"),[StringLiteral("\"s\""),FuncCall("foo",[])]),ArrayCell(Id("a"),[IntLiteral(2),IntLiteral(2),IntLiteral(3)])),
+            Assign(ArrayCell(Id("a"),[IntLiteral(2)]),ArrayCell(Id("a"),[IntLiteral(3),IntLiteral(4)])),
+            Assign(ArrayCell(FieldAccess(FieldAccess(Id("b"),"c"),"a"),[IntLiteral(2)]),ArrayCell(FieldAccess(FieldAccess(Id("b"),"c"),"a"),[IntLiteral(2)])),
+            Assign(ArrayCell(FieldAccess(FieldAccess(Id("b"),"c"),"a"),[IntLiteral(2),IntLiteral(3)]),ArrayCell(FieldAccess(FieldAccess(Id("b"),"c"),"a"),[IntLiteral(2),IntLiteral(3)]))]))
+		]))
         self.assertTrue(TestAST.checkASTGen(input, expect, 396))
 
 
-    def test_exp3(self):
-        input = \
-        """
-        var a int = 1;
-        """
-        expect = str(
-            Program(
-                [
-                    VarDecl('a', IntType(), IntLiteral(1))
-                ]
-            )
-        )
+    def test_stolent_test_case3(self):
+        input = """
+            func foo(){
+                if(1) { return;
+                }else if(1) {
+                    return 1;
+                    return ;
+                } else {return;}
+
+                if(1) {return;
+                }  else {
+                    return 1;
+                    return ;
+                }
+
+            } 
+"""
+        expect = str(Program([FuncDecl("foo",[],VoidType(),Block([
+            If(IntLiteral(1), Block([Return(None)]), 
+                If(IntLiteral(1), Block([Return(IntLiteral(1)),Return(None)]), Block([Return(None)]))),
+            If(IntLiteral(1), Block([Return(None)]), Block([Return(IntLiteral(1)),Return(None)]))]))
+		]))
         self.assertTrue(TestAST.checkASTGen(input, expect, 397))
 
 
-    def test_exp2(self):
-        input = \
-        """
-        var a int = 1;
-        """
-        expect = str(
-            Program(
-                [
-                    VarDecl('a', IntType(), IntLiteral(1))
-                ]
-            )
-        )
+    def test_stolen_test_case2(self):
+        input = """
+            func foo(){
+                if(1) {
+                    return 1;
+                }else if(2) {
+                    return 2;
+                } else if(3) {
+                    return 3;
+                } else if(4) {
+                    return 4;
+                } 
+
+            } 
+"""
+        expect = str(Program([FuncDecl("foo",[],VoidType(),Block([
+            If(IntLiteral(1), Block([Return(IntLiteral(1))]), 
+                If(IntLiteral(2), Block([Return(IntLiteral(2))]), 
+                    If(IntLiteral(3), Block([Return(IntLiteral(3))]), 
+                        If(IntLiteral(4), Block([Return(IntLiteral(4))]), None))))]))
+		]))
         self.assertTrue(TestAST.checkASTGen(input, expect, 398))
 
 
-    def test_exp1(self):
-        input = \
-        """
-        var a int = 1;
-        """
-        expect = str(
-            Program(
-                [
-                    VarDecl('a', IntType(), IntLiteral(1))
-                ]
-            )
-        )
+    def test_stolen_test_case(self):
+        input = """
+    var a int = 1;
+    var a float = 1;
+    var a boolean;
+    var a string = 1;
+    var a = 1;
+    var a ID = 1;
+    var a [ID][1] int = 1;
+"""
+        expect = str(Program([VarDecl("a",IntType(),IntLiteral(1)),
+			VarDecl("a",FloatType(),IntLiteral(1)),
+			VarDecl("a",BoolType(), None),
+			VarDecl("a",StringType(),IntLiteral(1)),
+			VarDecl("a", None,IntLiteral(1)),
+			VarDecl("a",Id("ID"),IntLiteral(1)),
+			VarDecl("a",ArrayType([Id("ID"),IntLiteral(1)],IntType()),IntLiteral(1))
+		]))
         self.assertTrue(TestAST.checkASTGen(input, expect, 399))

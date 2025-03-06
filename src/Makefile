@@ -16,6 +16,6 @@ ast :
 
 all :
 	toilet --metal -t --font mono12  "test all"
-	bash ./run.sh
+	zsh ./run.sh
 
 .PHONY : gen ast all lex par
