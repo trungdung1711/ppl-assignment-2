@@ -5477,47 +5477,218 @@ class ASTGenSuite(unittest.TestCase):
     AST: Expression representation
     #==============================
     '''
-    def test_380(self):
+    def test_simple_expression_or_and(self):
         input = \
         """
-        var a int = 1;
+        var a boolean = (true && false || false) != (a > b) != (c >= d)
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    VarDecl(
+                        'a',
+                        BoolType(),
+                        BinaryOp(
+                            '!=',
+                            BinaryOp(
+                                '!=',
+                                BinaryOp(
+                                    '||',
+                                    BinaryOp(
+                                        '&&',
+                                        BooleanLiteral(True),
+                                        BooleanLiteral(False)
+                                    ),
+                                    BooleanLiteral(False)
+                                ),
+                                BinaryOp(
+                                    '>',
+                                    Id('a'),
+                                    Id('b')
+                                )
+                            ),
+                            BinaryOp(
+                                '>=',
+                                Id('c'),
+                                Id('d')
+                            )
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 380))
 
-    def test_381(self):
+
+    def test_more_complex_expression_arithemetic(self):
         input = \
         """
-        var a int = 1;
+        var a int = (a+b+c-d-e) % (a*b*c) * (a/b/c) / (-a+-b+-c + (a*b*c))
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    VarDecl(
+                        'a',
+                        IntType(),
+                        BinaryOp(
+                            '/',
+                            BinaryOp(
+                                '*',
+                                BinaryOp(
+                                    '%',
+                                    BinaryOp(
+                                        '-',
+                                        BinaryOp(
+                                            '-',
+                                            BinaryOp(
+                                                '+',
+                                                BinaryOp(
+                                                    '+',
+                                                    Id('a'),
+                                                    Id('b')
+                                                ),
+                                                Id('c')
+                                            ),
+                                            Id('d')
+                                        ),
+                                        Id('e')
+                                    ),
+                                    BinaryOp(
+                                        '*',
+                                        BinaryOp(
+                                            '*',
+                                            Id('a'),
+                                            Id('b')
+                                        ),
+                                        Id('c')
+                                    )
+                                ),
+                                BinaryOp(
+                                    '/',
+                                    BinaryOp(
+                                        '/',
+                                        Id('a'),
+                                        Id('b')
+                                    ),
+                                    Id('c')
+                                )
+                            ),
+                            BinaryOp(
+                                '+',
+                                BinaryOp(
+                                    '+',
+                                    BinaryOp(
+                                        '+',
+                                        UnaryOp(
+                                            '-',
+                                            Id('a')
+                                        ),
+                                        UnaryOp(
+                                            '-',
+                                            Id('b')
+                                        )
+                                    ),
+                                    UnaryOp(
+                                        '-',
+                                        Id('c')
+                                    )
+                                ),
+                                BinaryOp(
+                                    '*',
+                                    BinaryOp(
+                                        '*',
+                                        Id('a'),
+                                        Id('b')
+                                    ),
+                                    Id('c')
+                                )
+                            )
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 381))
 
-    def test_382(self):
+
+    def test_associativity_of_expression(self):
         input = \
         """
-        var a int = 1;
+        const CONST = (a-b+c-d) + (a*b*c/d/e % f) + (---!a) + random()
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    ConstDecl(
+                        'CONST',
+                        None,
+                        BinaryOp(
+                            '+',
+                            BinaryOp(
+                                '+',
+                                BinaryOp(
+                                    '+',
+                                    BinaryOp(
+                                        '-',
+                                        BinaryOp(
+                                            '+',
+                                            BinaryOp(
+                                                '-',
+                                                Id('a'),
+                                                Id('b')
+                                            ),
+                                            Id('c')
+                                        ),
+                                        Id('d')
+                                    ),
+                                    BinaryOp(
+                                        '%',
+                                        BinaryOp(
+                                            '/',
+                                            BinaryOp(
+                                                '/',
+                                                BinaryOp(
+                                                    '*',
+                                                    BinaryOp(
+                                                        '*',
+                                                        Id('a'),
+                                                        Id('b')
+                                                    ),
+                                                    Id('c')
+                                                ),
+                                                Id('d')
+                                            ),
+                                            Id('e')
+                                        ),
+                                        Id('f')
+                                    )
+                                ),
+                                UnaryOp(
+                                    '-',
+                                    UnaryOp(
+                                        '-',
+                                        UnaryOp(
+                                            '-',
+                                            UnaryOp(
+                                                '!',
+                                                Id('a')
+                                            )
+                                        )
+                                    )
+                                )
+                            ),
+                            FuncCall(
+                                'random',
+                                []
+                            )
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 382))
+
 
     def test_383(self):
         input = \
