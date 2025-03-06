@@ -4097,75 +4097,374 @@ class ASTGenSuite(unittest.TestCase):
     - rhs : Expr
     #==============================
     '''
-    def test_366(self):
+    def test_simple_assignment_statement(self):
         input = \
         """
-        var a int = 1;
+            func main() int {
+                a := ((100)-200)%100
+                a.f1.f2.f3 := 1*2*3*4*5
+                a[1][2][3][4] := 1/2/3/4*5
+            }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    FuncDecl(
+                        'main',
+                        [],
+                        IntType(),
+                        Block(
+                            [
+                                Assign(
+                                    Id('a'),
+                                    BinaryOp(
+                                        '%',
+                                        BinaryOp(
+                                            '-',
+                                            IntLiteral(100),
+                                            IntLiteral(200)
+                                        ),
+                                        IntLiteral(100)
+                                    )
+                                ),
+                                Assign(
+                                    FieldAccess(
+                                        FieldAccess(
+                                            FieldAccess(
+                                                Id('a'),
+                                                'f1'
+                                            ),
+                                            'f2'
+                                        ),
+                                        'f3'
+                                    ),
+                                    BinaryOp(
+                                        '*',
+                                        BinaryOp(
+                                            '*',
+                                            BinaryOp(
+                                                '*',
+                                                BinaryOp(
+                                                    '*',
+                                                    IntLiteral(1),
+                                                    IntLiteral(2)
+                                                ),
+                                                IntLiteral(3)
+                                            ),
+                                            IntLiteral(4)
+                                        ),
+                                        IntLiteral(5)
+                                    )
+                                ),
+                                Assign(
+                                    ArrayCell(
+                                        Id('a'),
+                                        [
+                                            IntLiteral(1),
+                                            IntLiteral(2),
+                                            IntLiteral(3),
+                                            IntLiteral(4)
+                                        ]
+                                    ),
+                                    BinaryOp(
+                                        '*',
+                                        BinaryOp(
+                                            '/',
+                                            BinaryOp(
+                                                '/',
+                                                BinaryOp(
+                                                    '/',
+                                                    IntLiteral(1),
+                                                    IntLiteral(2)
+                                                ),
+                                                IntLiteral(3)
+                                            ),
+                                            IntLiteral(4)
+                                        ),
+                                        IntLiteral(5)
+                                    )
+                                )
+                            ]
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 366))
 
-    def test_367(self):
+
+    def test_assignment_statement_with_5_different_operators(self):
         input = \
         """
-        var a int = 1;
+        func test(op [5]string) boolean {
+            a := 1;
+            a += 1;
+            a -= 1;
+            a *= 1;
+            a /= 1;
+            a %= 1;
+            return a;
+        }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    FuncDecl(
+                        'test',
+                        [
+                            ParamDecl('op', ArrayType(
+                                [
+                                    IntLiteral(5)
+                                ],
+                                StringType()
+                            ))
+                        ],
+                        BoolType(),
+                        Block(
+                            [
+                                Assign(
+                                    Id('a'),
+                                    IntLiteral(1)
+                                ),
+                                Assign(
+                                    Id('a'),
+                                    BinaryOp(
+                                        '+',
+                                        Id('a'),
+                                        IntLiteral(1)
+                                    )
+                                ),
+                                Assign(
+                                    Id('a'),
+                                    BinaryOp(
+                                        '-',
+                                        Id('a'),
+                                        IntLiteral(1)
+                                    )
+                                ),
+                                Assign(
+                                    Id('a'),
+                                    BinaryOp(
+                                        '*',
+                                        Id('a'),
+                                        IntLiteral(1)
+                                    )
+                                ),
+                                Assign(
+                                    Id('a'),
+                                    BinaryOp(
+                                        '/',
+                                        Id('a'),
+                                        IntLiteral(1)
+                                    )
+                                ),
+                                Assign(
+                                    Id('a'),
+                                    BinaryOp(
+                                        '%',
+                                        Id('a'),
+                                        IntLiteral(1)
+                                    )
+                                ),
+                                Return(
+                                    Id('a')
+                                )
+                            ]
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 367))
 
-    def test_368(self):
+
+    def test_more_complex_assignment_statement_with_array_cell_chain(self):
         input = \
         """
-        var a int = 1;
+        func (h Human) cal(a,b,c,d int) {
+            h.weapons[1][2][3][4][5][6][7][8][9][10] %= 1
+        }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    MethodDecl(
+                        'h',
+                        Id('Human'),
+                        FuncDecl(
+                            'cal',
+                            [
+                                ParamDecl('a', IntType()),
+                                ParamDecl('b', IntType()),
+                                ParamDecl('c', IntType()),
+                                ParamDecl('d', IntType()),
+                            ],
+                            VoidType(),
+                            Block(
+                                [
+                                    Assign(
+                                        ArrayCell(
+                                            FieldAccess(
+                                                Id('h'),
+                                                'weapons'
+                                            ),
+                                            [
+                                                IntLiteral(1),
+                                                IntLiteral(2),
+                                                IntLiteral(3),
+                                                IntLiteral(4),
+                                                IntLiteral(5),
+                                                IntLiteral(6),
+                                                IntLiteral(7),
+                                                IntLiteral(8),
+                                                IntLiteral(9),
+                                                IntLiteral(10),
+                                            ]
+                                        ),
+                                        BinaryOp(
+                                            '%',
+                                            ArrayCell(
+                                                FieldAccess(
+                                                    Id('h'),
+                                                    'weapons'
+                                                ),
+                                                [
+                                                    IntLiteral(1),
+                                                    IntLiteral(2),
+                                                    IntLiteral(3),
+                                                    IntLiteral(4),
+                                                    IntLiteral(5),
+                                                    IntLiteral(6),
+                                                    IntLiteral(7),
+                                                    IntLiteral(8),
+                                                    IntLiteral(9),
+                                                    IntLiteral(10),
+                                                ]
+                                            ),
+                                            IntLiteral(1)
+                                        )
+                                    )
+                                ]
+                            )
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 368))
 
-    def test_369(self):
+
+    def test_more_complex_assignment_statement_with_field_access(self):
         input = \
         """
-        var a int = 1;
+        func main() {
+            a.f1[1].f2.f3[3][1].f4.f5.meth(true).f5.f6 := 100
+        }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    FuncDecl(
+                        'main',
+                        [],
+                        VoidType(),
+                        Block(
+                            [
+                                Assign(
+                                    FieldAccess(
+                                        FieldAccess(
+                                            MethCall(
+                                                FieldAccess(
+                                                    FieldAccess(
+                                                        ArrayCell(
+                                                            FieldAccess(
+                                                                FieldAccess(
+                                                                    ArrayCell(
+                                                                        FieldAccess(
+                                                                            Id('a'),
+                                                                            'f1'
+                                                                        ),
+                                                                        [
+                                                                            IntLiteral(1)
+                                                                        ]
+                                                                    ),
+                                                                    'f2'
+                                                                ),
+                                                                'f3'
+                                                            ),
+                                                            [
+                                                                IntLiteral(3),
+                                                                IntLiteral(1)
+                                                            ]
+                                                        ),
+                                                        'f4'
+                                                    ),
+                                                    'f5'
+                                                ),
+                                                'meth',
+                                                [
+                                                    BooleanLiteral(True)
+                                                ]
+                                            ),
+                                            'f5'
+                                        ),
+                                        'f6'
+                                    ),
+                                    IntLiteral(100)
+                                )
+                            ]
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 369))
 
-    def test_370(self):
+
+    def test_more_more_complex_assigment_statement_with_id(self):
         input = \
         """
-        var a int = 1;
+        func main() {
+        a += (true || false) && (false && false)
+        }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    FuncDecl(
+                        'main',
+                        [],
+                        VoidType(),
+                        Block(
+                            [
+                                Assign(
+                                    Id('a'),
+                                    BinaryOp(
+                                        '+',
+                                        Id('a'),
+                                        BinaryOp(
+                                            '&&',
+                                            BinaryOp(
+                                                '||',
+                                                BooleanLiteral(True),
+                                                BooleanLiteral(False)
+                                            ),
+                                            BinaryOp(
+                                                '&&',
+                                                BooleanLiteral(False),
+                                                BooleanLiteral(False)
+                                            )
+                                        )
+                                    )
+                                )
+                            ]
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 370))
+
 
     '''
     #==============================
