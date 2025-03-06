@@ -4491,127 +4491,981 @@ class ASTGenSuite(unittest.TestCase):
     - loop : Block
     #==============================
     '''
-    def test_371(self):
+    def test_simple_for_basic_ast_generation(self):
         input = \
         """
-        var a int = 1;
+        func main() {
+            a := 0
+            for i {
+                print("True\\n")
+                a := a + 1;
+                if (a == 100) {
+                    break;
+                }
+            }
+        }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    FuncDecl(
+                        'main',
+                        [],
+                        VoidType(),
+                        Block(
+                            [
+                                Assign(
+                                    Id('a'),
+                                    IntLiteral(0)
+                                ),
+                                ForBasic(
+                                    Id('i'),
+                                    Block(
+                                        [
+                                            FuncCall(
+                                                'print',
+                                                [
+                                                    StringLiteral('"True\\n"')
+                                                ]
+                                            ),
+                                            Assign(
+                                                Id('a'),
+                                                BinaryOp(
+                                                    '+',
+                                                    Id('a'),
+                                                    IntLiteral(1)
+                                                )
+                                            ),
+                                            If(
+                                                BinaryOp(
+                                                    '==',
+                                                    Id('a'),
+                                                    IntLiteral(100)
+                                                ),
+                                                Block(
+                                                    [
+                                                        Break()
+                                                    ]
+                                                ),
+                                                None
+                                            )
+                                        ]
+                                    )
+                                )
+                            ]
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 371))
 
-    def test_372(self):
+
+    def test_more_complex_basic_for_ast_generation(self):
         input = \
         """
-        var a int = 1;
+        func (d Dinosaur) eat() {
+            for !d.is_dead() {
+                d.eat();
+            }
+
+
+            for true {
+                break;
+            }
+        }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    MethodDecl(
+                        'd',
+                        Id('Dinosaur'),
+                        FuncDecl(
+                            'eat',
+                            [],
+                            VoidType(),
+                            Block(
+                                [
+                                    ForBasic(
+                                        UnaryOp(
+                                            '!',
+                                            MethCall(
+                                                Id('d'),
+                                                'is_dead',
+                                                []
+                                            )
+                                        ),
+                                        Block(
+                                            [
+                                                MethCall(
+                                                    Id('d'),
+                                                    'eat',
+                                                    []
+                                                )
+                                            ]
+                                        )
+                                    ),
+                                    ForBasic(
+                                        BooleanLiteral(True),
+                                        Block(
+                                            [
+                                                Break()
+                                            ]
+                                        )
+                                    )
+                                ]
+                            )
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 372))
 
-    def test_373(self):
+
+    def test_simple_for_step_ast_creation(self):
         input = \
         """
-        var a int = 1;
+            func main() {
+                for index := 0;index < 100 * index;index*=3 {
+                    break;
+                    continue;
+                    return;
+                }
+            }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    FuncDecl(
+                        'main',
+                        [],
+                        VoidType(),
+                        Block(
+                            [
+                                ForStep(
+                                    Assign(
+                                        Id('index'),
+                                        IntLiteral(0)
+                                    ),
+                                    BinaryOp(
+                                        '<',
+                                        Id('index'),
+                                        BinaryOp(
+                                            '*',
+                                            IntLiteral(100),
+                                            Id('index')
+                                        )
+                                    ),
+                                    Assign(
+                                        Id('index'),
+                                        BinaryOp(
+                                            '*',
+                                            Id('index'),
+                                            IntLiteral(3)
+                                        )
+                                    ),
+                                    Block(
+                                        [
+                                            Break(),
+                                            Continue(),
+                                            Return(None)
+                                        ]
+                                    )
+                                )
+                            ]
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 373))
 
-    def test_374(self):
+
+    def test_more_complex_for_step_ast_creation(self):
         input = \
         """
-        var a int = 1;
+            func main() {
+                for var index = 0; is_good(index);index/=100{
+                    for var index int = 10; is_bad(index); index*=100 {
+                        print(index)
+                        for var index int = 1; c.is_ok(index); index-=1 {
+                            print(index)
+                        }
+                    }
+                    return ;
+                }
+            }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    FuncDecl(
+                        'main',
+                        [],
+                        VoidType(),
+                        Block(
+                            [
+                                ForStep(
+                                    VarDecl(
+                                        'index',
+                                        None,
+                                        IntLiteral(0)
+                                    ),
+                                    FuncCall(
+                                        'is_good',
+                                        [
+                                            Id('index')
+                                        ]
+                                    ),
+                                    Assign(
+                                        Id('index'),
+                                        BinaryOp(
+                                            '/',
+                                            Id('index'),
+                                            IntLiteral(100)
+                                        )
+                                    ),
+                                    Block(
+                                        [
+                                            ForStep(
+                                                VarDecl(
+                                                    'index',
+                                                    IntType(),
+                                                    IntLiteral(10)
+                                                ),
+                                                FuncCall(
+                                                    'is_bad',
+                                                    [
+                                                        Id('index')
+                                                    ]
+                                                ),
+                                                Assign(
+                                                    Id('index'),
+                                                    BinaryOp(
+                                                        '*',
+                                                        Id('index'),
+                                                        IntLiteral(100)
+                                                    )
+                                                ),
+                                                Block(
+                                                    [
+                                                        FuncCall(
+                                                            'print',
+                                                            [
+                                                                Id('index')
+                                                            ]
+                                                        ),
+                                                        ForStep(
+                                                            VarDecl(
+                                                                'index',
+                                                                IntType(),
+                                                                IntLiteral(1)
+                                                            ),
+                                                            MethCall(
+                                                                Id('c'),
+                                                                'is_ok',
+                                                                [
+                                                                    Id('index')
+                                                                ]
+                                                            ),
+                                                            Assign(
+                                                                Id('index'),
+                                                                BinaryOp(
+                                                                    '-',
+                                                                    Id('index'),
+                                                                    IntLiteral(1)
+                                                                )
+                                                            ),
+                                                            Block(
+                                                                [
+                                                                    FuncCall(
+                                                                        'print',
+                                                                        [
+                                                                            Id('index')
+                                                                        ]
+                                                                    )
+                                                                ]
+                                                            )
+                                                        )
+                                                    ]
+                                                )
+                                            ),
+                                            Return(None)
+                                        ]
+                                    )
+                                ),
+                            ]
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 374))
 
-    def test_375(self):
+
+    def test_simple_for_each_ast_creation(self):
         input = \
         """
-        var a int = 1;
+            func main() {
+                for index, value := range arr[1][2][3] {
+                    return;
+                    for _, ref := range Util.util.get_array(5,5) {
+                        util.print(util.len(ref))
+                    }
+                }
+            }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    FuncDecl(
+                        'main',
+                        [],
+                        VoidType(),
+                        Block(
+                            [
+                                ForEach(
+                                    Id('index'),
+                                    Id('value'),
+                                    ArrayCell(
+                                        Id('arr'),
+                                        [
+                                            IntLiteral(1),
+                                            IntLiteral(2),
+                                            IntLiteral(3)
+                                        ]
+                                    ),
+                                    Block(
+                                        [
+                                            Return(None),
+                                            ForEach(
+                                                Id('_'),
+                                                Id('ref'),
+                                                MethCall(
+                                                    FieldAccess(
+                                                        Id('Util'),
+                                                        'util'
+                                                    ),
+                                                    'get_array',
+                                                    [
+                                                        IntLiteral(5),
+                                                        IntLiteral(5)
+                                                    ]
+                                                ),
+                                                Block(
+                                                    [
+                                                        MethCall(
+                                                            Id('util'),
+                                                            'print',
+                                                            [
+                                                                MethCall(
+                                                                    Id('util'),
+                                                                    'len',
+                                                                    [
+                                                                        Id('ref')
+                                                                    ]
+                                                                )
+                                                            ]
+                                                        )
+                                                    ]
+                                                )
+                                            )
+                                        ]
+                                    )
+                                )
+                            ]
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 375))
 
-    def test_376(self):
+
+    def test_complex_for_each_ast_creation(self):
         input = \
         """
-        var a int = 1;
+            func loop() {
+                for i, v := range math.vector(1, 2, 3, 4) {
+                if (v == nil) {
+                    continue;
+                } else {
+                    for j, v := range human.money {
+                        a := v.price()
+                    }
+                }
+                print(v)
+                }
+            }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    FuncDecl(
+                        'loop',
+                        [],
+                        VoidType(),
+                        Block(
+                            [
+                                ForEach(
+                                    Id('i'),
+                                    Id('v'),
+                                    MethCall(
+                                        Id('math'),
+                                        'vector',
+                                        [
+                                            IntLiteral(1),
+                                            IntLiteral(2),
+                                            IntLiteral(3),
+                                            IntLiteral(4)
+                                        ]
+                                    ),
+                                    Block(
+                                        [
+                                            If(
+                                                BinaryOp(
+                                                    '==',
+                                                    Id('v'),
+                                                    NilLiteral()
+                                                ),
+                                                Block(
+                                                    [
+                                                        Continue()
+                                                    ]
+                                                ),
+                                                Block(
+                                                    [
+                                                        ForEach(
+                                                            Id('j'),
+                                                            Id('v'),
+                                                            FieldAccess(
+                                                                Id('human'),
+                                                                'money'
+                                                            ),
+                                                            Block(
+                                                                [
+                                                                    Assign(
+                                                                        Id('a'),
+                                                                        MethCall(
+                                                                            Id('v'),
+                                                                            'price',
+                                                                            [
+
+                                                                            ]
+                                                                        )
+                                                                    )
+                                                                ]
+                                                            )
+                                                        )
+                                                    ]
+                                                )
+                                            ),
+                                            FuncCall(
+                                                'print',
+                                                [
+                                                    Id('v')
+                                                ]
+                                            )
+                                        ]
+                                    )
+                                )
+                            ]
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 376))
 
-    def test_377(self):
+
+    def test_complex_combined_real_go_program_to_ast(self):
         input = \
         """
-        var a int = 1;
+            type Weapon struct {
+                damage int;
+                crit float;
+            }
+            
+            type Killer struct {
+                name string;
+                age int;
+                weapons [10]Weapon
+            }
+            
+            func (k Killer) kill(h Human) {
+                for h.is_alive() {
+                    if (date() == "Fri 13th") {
+                        h.blood -= k.weapons[1].crit
+                    }
+                    h.blood -= k.weapons[1].damage
+                }
+            }
+
+            func serial_killer_case(humans [10]Human) {
+                for i, h := range humans {
+                    k.kill(h)
+                }
+            }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    StructType(
+                        'Weapon',
+                        [
+                            ('damage', IntType()),
+                            ('crit', FloatType())
+                        ],
+                        []
+                    ),
+                    StructType(
+                        'Killer',
+                        [
+                            ('name', StringType()),
+                            ('age', IntType()),
+                            ('weapons', ArrayType(
+                                [
+                                    IntLiteral(10)
+                                ],
+                                Id('Weapon')
+                            ))
+                        ],
+                        []
+                    ),
+                    MethodDecl(
+                        'k',
+                        Id('Killer'),
+                        FuncDecl(
+                            'kill',
+                            [
+                                ParamDecl('h', Id('Human'))
+                            ],
+                            VoidType(),
+                            Block(
+                                [
+                                    ForBasic(
+                                        MethCall(
+                                            Id('h'),
+                                            'is_alive',
+                                            []
+                                        ),
+                                        Block(
+                                            [
+                                                If(
+                                                    BinaryOp(
+                                                        '==',
+                                                        FuncCall(
+                                                            'date',
+                                                            []
+                                                        ),
+                                                        StringLiteral('"Fri 13th"')
+                                                    ),
+                                                    Block(
+                                                        [
+                                                            Assign(
+                                                                FieldAccess(
+                                                                    Id('h'),
+                                                                    'blood'
+                                                                ),
+                                                                BinaryOp(
+                                                                    '-',
+                                                                    FieldAccess(
+                                                                        Id('h'),
+                                                                        'blood'
+                                                                    ),
+                                                                    FieldAccess(
+                                                                        ArrayCell(
+                                                                            FieldAccess(
+                                                                                Id('k'),
+                                                                                'weapons'
+                                                                            ),
+                                                                            [
+                                                                                IntLiteral(1)
+                                                                            ]
+                                                                        ),
+                                                                        'crit'
+                                                                    )
+                                                                )
+                                                            )
+                                                        ]
+                                                    ),
+                                                    None
+                                                ),
+                                                Assign(
+                                                    FieldAccess(
+                                                        Id('h'),
+                                                        'blood'
+                                                    ),
+                                                    BinaryOp(
+                                                        '-',
+                                                        FieldAccess(
+                                                            Id('h'),
+                                                            'blood'
+                                                        ),
+                                                        FieldAccess(
+                                                            ArrayCell(
+                                                                FieldAccess(
+                                                                    Id('k'),
+                                                                    'weapons'
+                                                                ),
+                                                                [
+                                                                    IntLiteral(1)
+                                                                ]
+                                                            ),
+                                                            'damage'
+                                                        )
+                                                    )
+                                                )
+                                            ]
+                                        )
+                                    )
+                                ]
+                            )
+                        )
+                    ),
+                    FuncDecl(
+                        'serial_killer_case',
+                        [
+                            ParamDecl('humans', ArrayType(
+                                [
+                                    IntLiteral(10)
+                                ],
+                                Id('Human')
+                            ))
+                        ],
+                        VoidType(),
+                        Block(
+                            [
+                                ForEach(
+                                    Id('i'),
+                                    Id('h'),
+                                    Id('humans'),
+                                    Block(
+                                        [
+                                            MethCall(
+                                                Id('k'),
+                                                'kill',
+                                                [
+                                                    Id('h')
+                                                ]
+                                            )
+                                        ]
+                                    )
+                                )
+                            ]
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 377))
 
-    def test_378(self):
+
+    def test_more_complex_combined_real_go_program_to_ast(self):
         input = \
         """
-        var a int = 1;
+        const PI = 3.14
+        const UNIT = "m"
+        const OUTPUT = Out{ terminal : true }
+        const UTIL = Util{}
+        
+        func format(result float) {
+            OUTPUT.print("Result is: " + UTIL.to_string(result) + " " + UNIT)
+        }
+
+        func add(a, b int) int {
+            return a + b
+        }
+
+
+         func random(seed int) int {
+            return ((seed * 100) %200) - seed + 1/(seed-1)
+        }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    ConstDecl(
+                        'PI',
+                        None,
+                        FloatLiteral(3.14)
+                    ),
+                    ConstDecl(
+                        'UNIT',
+                        None,
+                        StringLiteral('"m"')
+                    ),
+                    ConstDecl(
+                        'OUTPUT',
+                        None,
+                        StructLiteral(
+                            'Out',
+                            [
+                                ('terminal', BooleanLiteral(True))
+                            ]
+                        )
+                    ),
+                    ConstDecl(
+                        'UTIL',
+                        None,
+                        StructLiteral(
+                            'Util',
+                            [
+
+                            ]
+                        )
+                    ),
+                    FuncDecl(
+                        'format',
+                        [
+                            ParamDecl('result', FloatType())
+                        ],
+                        VoidType(),
+                        Block(
+                            [
+                                MethCall(
+                                    Id('OUTPUT'),
+                                    'print',
+                                    [
+                                        BinaryOp(
+                                            '+',
+                                            BinaryOp(
+                                                '+',
+                                                BinaryOp(
+                                                    '+',
+                                                    StringLiteral('"Result is: "'),
+                                                    MethCall(
+                                                        Id('UTIL'),
+                                                        'to_string',
+                                                        [
+                                                            Id('result')
+                                                        ]
+                                                    )
+                                                ),
+                                                StringLiteral('" "')
+                                            ),
+                                            Id('UNIT')
+                                        )
+                                    ]
+                                )
+                            ]
+                        )
+                    ),
+                    FuncDecl(
+                        'add',
+                        [
+                            ParamDecl('a', IntType()),
+                            ParamDecl('b', IntType())
+                        ],
+                        IntType(),
+                        Block(
+                            [
+                                Return(
+                                    BinaryOp(
+                                        '+',
+                                        Id('a'),
+                                        Id('b')
+                                    )
+                                )
+                            ]
+                        )
+                    ),
+                    FuncDecl(
+                        'random',
+                        [
+                            ParamDecl('seed', IntType())
+                        ],
+                        IntType(),
+                        Block(
+                            [
+                                Return(
+                                    BinaryOp(
+                                        '+',
+                                        BinaryOp(
+                                            '-',
+                                            BinaryOp(
+                                                '%',
+                                                BinaryOp(
+                                                    '*',
+                                                    Id('seed'),
+                                                    IntLiteral(100)
+                                                ),
+                                                IntLiteral(200)
+                                            ),
+                                            Id('seed')
+                                        ),
+                                        BinaryOp(
+                                            '/',
+                                            IntLiteral(1),
+                                            BinaryOp(
+                                                '-',
+                                                Id('seed'),
+                                                IntLiteral(1)
+                                            )
+                                        )
+                                    )
+                                )
+                            ]
+                        )
+                    )
                 ]
             )
         )
         self.assertTrue(TestAST.checkASTGen(input, expect, 378))
 
-    def test_379(self):
+
+    def test_more_complex_combined_real_go_source_code_to_ast(self):
         input = \
         """
-        var a int = 1;
+            type Monster interface {
+                attack(m Monster);
+                eat(f Food) Shit;
+                drink(w Water);
+                is_dead() boolean;
+            }
+
+
+            type Human interface {
+                eat(f Food) Shit;
+                attack(h Human) float;
+                sleep();
+                make_food(a int, b float, c string, d,e boolean) Food;
+            }
+
+
+            type Kyojin struct{
+                blood int;
+                height float;
+            }
+
+
+            func (k Kyojin) is_dead() boolean {
+                return false;
+            }
+            
+            func (k Kyojin) attack(m Monster) {
+                m.is_dead := true;
+                return;
+            }
         """
         expect = str(
             Program(
                 [
-                    VarDecl('a', IntType(), IntLiteral(1))
+                    InterfaceType(
+                        'Monster',
+                        [
+                            Prototype(
+                                'attack',
+                                [
+                                    Id('Monster')
+                                ],
+                                VoidType()
+                            ),
+                            Prototype(
+                                'eat',
+                                [
+                                    Id('Food')
+                                ],
+                                Id('Shit')
+                            ),
+                            Prototype(
+                                'drink',
+                                [
+                                    Id('Water')
+                                ],
+                                VoidType()
+                            ),
+                            Prototype(
+                                'is_dead',
+                                [],
+                                BoolType()
+                            )
+                        ]
+                    ),
+                    InterfaceType(
+                        'Human',
+                        [
+                            Prototype(
+                                'eat',
+                                [
+                                    Id('Food')
+                                ],
+                                Id('Shit')
+                            ),
+                            Prototype(
+                                'attack',
+                                [
+                                    Id('Human')
+                                ],
+                                FloatType()
+                            ),
+                            Prototype(
+                                'sleep',
+                                [],
+                                VoidType()
+                            ),
+                            Prototype(
+                                'make_food',
+                                [
+                                    IntType(),
+                                    FloatType(),
+                                    StringType(),
+                                    BoolType(),
+                                    BoolType()
+                                ],
+                                Id('Food')
+                            )
+                        ]
+                    ),
+                    StructType(
+                        'Kyojin',
+                        [
+                            ('blood', IntType()),
+                            ('height', FloatType())
+                        ],
+                        []
+                    ),
+                    MethodDecl(
+                        'k',
+                        Id('Kyojin'),
+                        FuncDecl(
+                            'is_dead',
+                            [],
+                            BoolType(),
+                            Block(
+                                [
+                                    Return(
+                                        BooleanLiteral(False)
+                                    )
+                                ]
+                            )
+                        )
+                    ),
+                    MethodDecl(
+                        'k',
+                        Id('Kyojin'),
+                        FuncDecl(
+                            'attack',
+                            [
+                                ParamDecl('m', Id('Monster'))
+                            ],
+                            VoidType(),
+                            Block(
+                                [
+                                    Assign(
+                                        FieldAccess(
+                                            Id('m'),
+                                            'is_dead'
+                                        ),
+                                        BooleanLiteral(True)
+                                    ),
+                                    Return(None)
+                                ]
+                            )
+                        )
+                    )
                 ]
             )
         )
