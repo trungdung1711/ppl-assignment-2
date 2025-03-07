@@ -658,8 +658,10 @@ statement           : variable_declaration  // O    O
                                                             // CHECK!
                                                             // 25/2/2025 change the name for this special literal
                                                         // MAP
+                                                        // 3/7/2025 fixing the ID of the array literal
+                                                        // as python is a dynamic type PL
                                                         array_element           : array_element_literal           // which can allow typed array literal
-                                                                                // | ID                           // Just contain PrimLit (only), not ID
+                                                                                | ID                           // Just contain PrimLit (only), not ID
                                                                                 | LCB array_element_list RCB      // can be seen as another array_literal
                                                                                 ;
                                                                                 // 2/25/2025 removing the ID part, as alligned with the AST teacher's structure, NO ID
@@ -753,6 +755,11 @@ statement           : variable_declaration  // O    O
         // 2/25/2024 fixing the lhs rule for alignment with the AST
         // more specific case of the lhs
         // MAP
+        // SOS
+        // fixing the expression recursive affects lhs
+        // idea the expression of array_index must not include
+        // array_index -> wrong case
+        // -> must include array_index for a[1].c[2]
         lhs                     : field_access
                                 | array_index
                                 | ID
@@ -761,6 +768,13 @@ statement           : variable_declaration  // O    O
             field_access            : expression DOT ID
                                     ;
             // MAP
+            // should be expression that dont' contain the array access
+            // if there is expression that contains array access
+            // expression will catch all and only left one for the
+            // left hand side
+            // problem with lhs and expression
+            // SOS, expression will eat the index_list ->
+            // only left one
             array_index             : expression index_list
                                     ;
                 // MAP
@@ -831,6 +845,7 @@ statement           : variable_declaration  // O    O
         // 2/27/2025, fixing the for statement for AST's compatibility
         // 2/2/27/2025, using for_assignment which is the AssignStmt specific in For
         // MAP
+        // MUST
         ini_for_statement       : FOR ini SEMICOLON expression SEMICOLON for_assignment block SEMICOLON
                                 ;
             // there can be mistake at that point, but I choose to risk
@@ -850,6 +865,9 @@ statement           : variable_declaration  // O    O
                 // NOTE
                 // 2/27/2025 may convert it into Assign with lhs ID and rhs Expr
                 // MAP
+                // 3/4/2025 -> change it to VarDecl
+                // the specification clearly states variable declaration with initialization
+                // -> grammar rule
                 init_declaration        : VAR ID type_part EQUAL expression
                                         | VAR ID           EQUAL expression
                                         ;

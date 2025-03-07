@@ -7,26 +7,36 @@ class ASTGeneration(MiniGoVisitor):
 
     '''
     #==============================
-    AST: AST.IntegerLiteral
+    AST: AST.IntLiteral
     - value : int
     #==============================
     '''
+    # 3/7/2025 -> for value of different base -> don't cast from str to int
     def visitInteger_literal(self, ctx:MiniGoParser.Integer_literalContext):
+        '''
+            SOS: although we have the value of int, but the result 
+            is used with str(self.value) ->
+            - pass int -> str
+            - pass str -> str
 
+            - different base -> int -> str -> different
+        '''
         if ctx.DECIMAL_INTEGER():
-            text = ctx.DECIMAL_INTEGER().getText()
-            base = 10
+            # text = ctx.DECIMAL_INTEGER().getText()
+            # base = 10
+            return IntLiteral(ctx.DECIMAL_INTEGER().getText())
         elif ctx.BINARY_INTEGER():
             text = ctx.BINARY_INTEGER().getText()
-            base = 2
+            # base = 2
+            return IntLiteral(ctx.BINARY_INTEGER().getText())
         elif ctx.OCTAL_INTEGER():
-            text = ctx.OCTAL_INTEGER().getText()
-            base = 8
+            # text = ctx.OCTAL_INTEGER().getText()
+            # base = 8
+            return IntLiteral(ctx.OCTAL_INTEGER().getText())
         elif ctx.HEXA_INTEGER():
-            text = ctx.HEXA_INTEGER().getText()
-            base = 16
-        
-        return IntLiteral(value=int(text, base=base))
+            # text = ctx.HEXA_INTEGER().getText()
+            # base = 16
+            return IntLiteral(ctx.HEXA_INTEGER().getText())
     
 
     '''
@@ -35,8 +45,9 @@ class ASTGeneration(MiniGoVisitor):
     - value : bool
     #==============================
     '''
+    # 3/7/2024, fixing boolean literal -> use getText()
     def visitBoolean_literal(self, ctx:MiniGoParser.Boolean_literalContext):
-        return BooleanLiteral(value=True) if ctx.TRUE() else BooleanLiteral(value=False)
+        return BooleanLiteral(value=ctx.TRUE().getText()) if ctx.TRUE() else BooleanLiteral(value=ctx.FALSE().getText())
     
 
     '''
@@ -123,15 +134,24 @@ class ASTGeneration(MiniGoVisitor):
         return [self.visit(ctx.array_element())] if ctx.getChildCount() == 1 else [self.visit(ctx.array_element())] + self.visit(ctx.array_element_list())
     
 
+    # 3/7/2025, adding ID as a value of array_element, as python 
+    # is a dynamic type PL
     def visitArray_element(self, ctx:MiniGoParser.Array_elementContext):
-        return self.visit(ctx.array_element_literal()) if ctx.array_element_literal() else self.visit(ctx.array_element_list())
+        if ctx.array_element_literal():
+            return self.visit(ctx.array_element_literal())
+        elif ctx.ID():
+            return Id(ctx.ID().getText())
+        elif ctx.array_element_list():
+            return self.visit(ctx.array_element_list())
+        # return self.visit(ctx.array_element_literal()) if ctx.array_element_literal() else self.visit(ctx.array_element_list())
     
 
+    # 3/7/2025 -> fixing float literal, don't cast the string to float
     def visitArray_element_literal(self, ctx:MiniGoParser.Array_element_literalContext):
         if ctx.integer_literal():
             return self.visit(ctx.integer_literal())
         elif ctx.FLOATING_POINT():
-            return FloatLiteral(value=float(ctx.FLOATING_POINT().getText()))
+            return FloatLiteral(value=ctx.FLOATING_POINT().getText())
         elif ctx.STRING_LITERAL():
             return StringLiteral(value=ctx.STRING_LITERAL().getText())
         elif ctx.boolean_literal():
@@ -190,9 +210,22 @@ class ASTGeneration(MiniGoVisitor):
         return FieldAccess(receiver=self.visit(ctx.expression()), field=ctx.ID().getText())
     
 
+    # 3/5/2025 -> SOS fix the bug of ArrayCell
     def visitArray_index(self, ctx:MiniGoParser.Array_indexContext):
-        return ArrayCell(arr=self.visit(ctx.expression()), idx=self.visit(ctx.index_list()))
-    
+        # return ArrayCell(arr=self.visit(ctx.expression()), idx=self.visit(ctx.index_list()))
+        '''
+            - Attempt to fix the bug of ArrayCell
+        '''
+        # result should be an ArrayCell
+        expression = self.visit(ctx.expression())
+        if isinstance(expression, ArrayCell):
+            # prevent expression to greedily consume the index_list
+            [expression.idx.append(index) for index in self.visit(ctx.index_list())]
+            return expression
+        else:
+            # normal case
+            return ArrayCell(arr=self.visit(ctx.expression()), idx=self.visit(ctx.index_list()))
+
 
     def visitIndex_list(self, ctx:MiniGoParser.Index_listContext):
         return [self.visit(ctx.index())] if ctx.getChildCount() == 1 else [self.visit(ctx.index())] + self.visit(ctx.index_list())
@@ -274,7 +307,7 @@ class ASTGeneration(MiniGoVisitor):
 
 
     def visitStruct_declaration(self, ctx:MiniGoParser.Struct_declarationContext):
-        return StructType(name=ctx.ID().getText(), elements=self.visit(ctx.property_declaration_list()), methods=None)
+        return StructType(name=ctx.ID().getText(), elements=self.visit(ctx.property_declaration_list()), methods=[])
 
 
     def visitProperty_declaration_list(self, ctx:MiniGoParser.Property_declaration_listContext):
@@ -381,6 +414,10 @@ class ASTGeneration(MiniGoVisitor):
     #==============================
     '''
     def visitAssignment_statement(self, ctx:MiniGoParser.Assignment_statementContext):
+        '''
+            - The two self.visit(ctx.lhs()) are the same but
+            diffirent objects
+        '''
         if self.visit(ctx.assignment_operator()) is None:
             return Assign(lhs=self.visit(ctx.lhs()), rhs=self.visit(ctx.expression()))
         return Assign(lhs=self.visit(ctx.lhs()), rhs=BinaryOp(op=self.visit(ctx.assignment_operator()), left=self.visit(ctx.lhs()), right=self.visit(ctx.expression())))
@@ -452,8 +489,9 @@ class ASTGeneration(MiniGoVisitor):
         return Assign(lhs=Id(name=ctx.ID().getText()), rhs=BinaryOp(op=self.visit(ctx.assignment_operator()), left=Id(name=ctx.ID().getText()), right=self.visit(ctx.expression())))
     
 
+    # 3/4/2025 -> creating VarDecl
     def visitInit_declaration(self, ctx:MiniGoParser.Init_declarationContext):
-        return Assign(lhs=Id(name=ctx.ID().getText()), rhs=self.visit(ctx.expression())) if ctx.type_part() else Assign(lhs=Id(name=ctx.ID().getText()), rhs=self.visit(ctx.expression()))
+        return VarDecl(varName=ctx.ID().getText(), varType=self.visit(ctx.type_part()), varInit=self.visit(ctx.expression())) if ctx.type_part() else VarDecl(varName=ctx.ID().getText(), varType=None, varInit=self.visit(ctx.expression()))
     
 
     '''
@@ -507,6 +545,7 @@ class ASTGeneration(MiniGoVisitor):
     def visitEx4(self, ctx:MiniGoParser.Ex4Context):
         return self.visit(ctx.ex5()) if ctx.getChildCount() == 1 else BinaryOp(op=self.visit(ctx.mul_div_mod()), left=self.visit(ctx.ex4()), right=self.visit(ctx.ex5()))
 
+
     def visitMul_div_mod(self, ctx:MiniGoParser.Mul_div_modContext):
         if ctx.MUL():
             return str('*')
@@ -535,7 +574,7 @@ class ASTGeneration(MiniGoVisitor):
         if ctx.ex7():
             return self.visit(ctx.ex7())
         elif ctx.index_list():
-            return ArrayCell(arr=self.visit(ctx.ex6()), idx=self.visit(ctx.index_list))
+            return ArrayCell(arr=self.visit(ctx.ex6()), idx=self.visit(ctx.index_list()))
         elif ctx.argument_list():
             return MethCall(receiver=self.visit(ctx.ex6()), metName=ctx.ID().getText(), args=self.visit(ctx.argument_list()))
         else:
@@ -553,11 +592,22 @@ class ASTGeneration(MiniGoVisitor):
             return Id(ctx.ID().getText())
     
 
+    '''
+    #==============================
+    AST: AST.FloatLiteral
+    - value : float
+    AST: AST.StringLiteral
+    - value : str
+    #==============================
+    '''
     def visitLiteral(self, ctx:MiniGoParser.LiteralContext):
+        '''
+            SOS: Convert text to the value or not
+        '''
         if ctx.integer_literal():
             return self.visit(ctx.integer_literal())
         elif ctx.FLOATING_POINT():
-            return FloatLiteral(value=float(ctx.FLOATING_POINT().getText()))
+            return FloatLiteral(value=ctx.FLOATING_POINT().getText())
         elif ctx.STRING_LITERAL():
             return StringLiteral(value=ctx.STRING_LITERAL().getText())
         elif ctx.boolean_literal():
