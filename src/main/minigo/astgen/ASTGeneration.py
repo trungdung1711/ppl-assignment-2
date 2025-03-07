@@ -11,25 +11,32 @@ class ASTGeneration(MiniGoVisitor):
     - value : int
     #==============================
     '''
+    # 3/7/2025 -> for value of different base -> don't cast from str to int
     def visitInteger_literal(self, ctx:MiniGoParser.Integer_literalContext):
         '''
-            SOS: should we convert it from str to int
-            or let it as it is
+            SOS: although we have the value of int, but the result 
+            is used with str(self.value) ->
+            - pass int -> str
+            - pass str -> str
+
+            - different base -> int -> str -> different
         '''
         if ctx.DECIMAL_INTEGER():
-            text = ctx.DECIMAL_INTEGER().getText()
-            base = 10
+            # text = ctx.DECIMAL_INTEGER().getText()
+            # base = 10
+            return IntLiteral(ctx.DECIMAL_INTEGER().getText())
         elif ctx.BINARY_INTEGER():
             text = ctx.BINARY_INTEGER().getText()
-            base = 2
+            # base = 2
+            return IntLiteral(ctx.BINARY_INTEGER().getText())
         elif ctx.OCTAL_INTEGER():
-            text = ctx.OCTAL_INTEGER().getText()
-            base = 8
+            # text = ctx.OCTAL_INTEGER().getText()
+            # base = 8
+            return IntLiteral(ctx.OCTAL_INTEGER().getText())
         elif ctx.HEXA_INTEGER():
-            text = ctx.HEXA_INTEGER().getText()
-            base = 16
-        
-        return IntLiteral(value=int(text, base=base))
+            # text = ctx.HEXA_INTEGER().getText()
+            # base = 16
+            return IntLiteral(ctx.HEXA_INTEGER().getText())
     
 
     '''
@@ -38,8 +45,9 @@ class ASTGeneration(MiniGoVisitor):
     - value : bool
     #==============================
     '''
+    # 3/7/2024, fixing boolean literal -> use getText()
     def visitBoolean_literal(self, ctx:MiniGoParser.Boolean_literalContext):
-        return BooleanLiteral(value=True) if ctx.TRUE() else BooleanLiteral(value=False)
+        return BooleanLiteral(value=ctx.TRUE().getText()) if ctx.TRUE() else BooleanLiteral(value=ctx.FALSE().getText())
     
 
     '''
@@ -126,15 +134,24 @@ class ASTGeneration(MiniGoVisitor):
         return [self.visit(ctx.array_element())] if ctx.getChildCount() == 1 else [self.visit(ctx.array_element())] + self.visit(ctx.array_element_list())
     
 
+    # 3/7/2025, adding ID as a value of array_element, as python 
+    # is a dynamic type PL
     def visitArray_element(self, ctx:MiniGoParser.Array_elementContext):
-        return self.visit(ctx.array_element_literal()) if ctx.array_element_literal() else self.visit(ctx.array_element_list())
+        if ctx.array_element_literal():
+            return self.visit(ctx.array_element_literal())
+        elif ctx.ID():
+            return Id(ctx.ID().getText())
+        elif ctx.array_element_list():
+            return self.visit(ctx.array_element_list())
+        # return self.visit(ctx.array_element_literal()) if ctx.array_element_literal() else self.visit(ctx.array_element_list())
     
 
+    # 3/7/2025 -> fixing float literal, don't cast the string to float
     def visitArray_element_literal(self, ctx:MiniGoParser.Array_element_literalContext):
         if ctx.integer_literal():
             return self.visit(ctx.integer_literal())
         elif ctx.FLOATING_POINT():
-            return FloatLiteral(value=float(ctx.FLOATING_POINT().getText()))
+            return FloatLiteral(value=ctx.FLOATING_POINT().getText())
         elif ctx.STRING_LITERAL():
             return StringLiteral(value=ctx.STRING_LITERAL().getText())
         elif ctx.boolean_literal():
@@ -590,7 +607,7 @@ class ASTGeneration(MiniGoVisitor):
         if ctx.integer_literal():
             return self.visit(ctx.integer_literal())
         elif ctx.FLOATING_POINT():
-            return FloatLiteral(value=float(ctx.FLOATING_POINT().getText()))
+            return FloatLiteral(value=ctx.FLOATING_POINT().getText())
         elif ctx.STRING_LITERAL():
             return StringLiteral(value=ctx.STRING_LITERAL().getText())
         elif ctx.boolean_literal():

@@ -658,8 +658,10 @@ statement           : variable_declaration  // O    O
                                                             // CHECK!
                                                             // 25/2/2025 change the name for this special literal
                                                         // MAP
+                                                        // 3/7/2025 fixing the ID of the array literal
+                                                        // as python is a dynamic type PL
                                                         array_element           : array_element_literal           // which can allow typed array literal
-                                                                                // | ID                           // Just contain PrimLit (only), not ID
+                                                                                | ID                           // Just contain PrimLit (only), not ID
                                                                                 | LCB array_element_list RCB      // can be seen as another array_literal
                                                                                 ;
                                                                                 // 2/25/2025 removing the ID part, as alligned with the AST teacher's structure, NO ID

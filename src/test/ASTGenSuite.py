@@ -71,13 +71,13 @@ class ASTGenSuite(unittest.TestCase):
         expect = str(
             Program(
                 [
-                    VarDecl('f', FloatType(), FloatLiteral(0.34)),
-                    VarDecl('f1', FloatType(), FloatLiteral(1.2e10)),
-                    VarDecl('f2', FloatType(), FloatLiteral(3.)),
-                    VarDecl('f3', FloatType(), FloatLiteral(0.)),
-                    VarDecl('f4', FloatType(), FloatLiteral(1.E-5)),
-                    VarDecl('f5', None, FloatLiteral(1.e10)),
-                    VarDecl('f6', None, FloatLiteral(000.100e+3))
+                    VarDecl('f', FloatType(), FloatLiteral('0.34')),
+                    VarDecl('f1', FloatType(), FloatLiteral('1.2e10')),
+                    VarDecl('f2', FloatType(), FloatLiteral('3.')),
+                    VarDecl('f3', FloatType(), FloatLiteral('0.')),
+                    VarDecl('f4', FloatType(), FloatLiteral('1.E-5')),
+                    VarDecl('f5', None, FloatLiteral('1.e10')),
+                    VarDecl('f6', None, FloatLiteral('000.100e+3'))
                 ]
             )
         )
@@ -169,12 +169,12 @@ class ASTGenSuite(unittest.TestCase):
                 [
                     VarDecl('a', IntType(), IntLiteral(32)),
                     VarDecl('b', IntType(), IntLiteral(0)),
-                    VarDecl('c', IntType(), IntLiteral(32)),
-                    VarDecl('d', IntType(), IntLiteral(32)),
-                    VarDecl('e', IntType(), IntLiteral(32)),
-                    VarDecl('f', IntType(), IntLiteral(32)),
-                    VarDecl('g', IntType(), IntLiteral(32)),
-                    VarDecl('h', IntType(), IntLiteral(32)),
+                    VarDecl('c', IntType(), IntLiteral('0b100000')),
+                    VarDecl('d', IntType(), IntLiteral('0B100000')),
+                    VarDecl('e', IntType(), IntLiteral('0o40')),
+                    VarDecl('f', IntType(), IntLiteral('0O40')),
+                    VarDecl('g', IntType(), IntLiteral('0x20')),
+                    VarDecl('h', IntType(), IntLiteral('0X20')),
                 ]
             )
         )
@@ -494,11 +494,11 @@ class ASTGenSuite(unittest.TestCase):
                         'arr',
                         ArrayType(
                             [
-                                IntLiteral(1),
-                                IntLiteral(2),
-                                IntLiteral(3),
-                                IntLiteral(4),
-                                IntLiteral(5),
+                                IntLiteral('0b01'),
+                                IntLiteral('0b10'),
+                                IntLiteral('0b11'),
+                                IntLiteral('0b100'),
+                                IntLiteral('0b101'),
                                 Id('ID')
                             ],
                             StringType()
@@ -626,8 +626,8 @@ class ASTGenSuite(unittest.TestCase):
                             ],
                             IntType(),
                             [
-                                IntLiteral(255),
-                                FloatLiteral(1.125),
+                                IntLiteral('0XFF'),
+                                FloatLiteral('1.125'),
                                 StringLiteral('"Hello World\\n"'),
                                 BooleanLiteral(True),
                                 BooleanLiteral(False),
@@ -758,8 +758,8 @@ class ASTGenSuite(unittest.TestCase):
             Program(
                 [
                     ConstDecl('a', None, IntLiteral(100)),
-                    ConstDecl('a1', None, IntLiteral(668)),
-                    ConstDecl('b', None, FloatLiteral(0.125)),
+                    ConstDecl('a1', None, IntLiteral('0o1234')),
+                    ConstDecl('b', None, FloatLiteral('0.125')),
                     ConstDecl('c', None, StringLiteral('"Hello World\\n"')),
                     ConstDecl('d', None, BooleanLiteral(True)),
                     ConstDecl('e', None, BooleanLiteral(False)),
@@ -1674,7 +1674,7 @@ class ASTGenSuite(unittest.TestCase):
                                             BinaryOp('+', IntLiteral(1), IntLiteral(1)),
                                             IntLiteral(3),
                                             BinaryOp('||', BooleanLiteral(True), BooleanLiteral(False)),
-                                            BinaryOp('+', IntLiteral(255), IntLiteral(1)
+                                            BinaryOp('+', IntLiteral('0xFF'), IntLiteral('0b01')
                                             )
                                         ]
                                     ),
@@ -2568,10 +2568,10 @@ class ASTGenSuite(unittest.TestCase):
                                     'weird_function',
                                     [
                                         IntLiteral(1),
-                                        IntLiteral(2),
-                                        IntLiteral(2),
-                                        IntLiteral(3),
-                                        FloatLiteral(1.5),
+                                        IntLiteral('0b10'),
+                                        IntLiteral('0o02'),
+                                        IntLiteral('0x03'),
+                                        FloatLiteral('1.5'),
                                         BooleanLiteral(True),
                                         StringLiteral('"hello\\n"'),
                                         NilLiteral(),
